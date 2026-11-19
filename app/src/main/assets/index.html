@@ -2,8 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROXY X - محاكاة التطبيق التفاعلية</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PROXY X</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
     <style>
@@ -11,38 +11,30 @@
             --bg-dark: #06040d;
             --card-bg: #110c21;
             --neon-purple: #9333ea;
-            --neon-glow: rgba(168, 85, 247, 0.7);
         }
 
-        body {
+        html, body {
             font-family: 'Cairo', sans-serif;
-            background-color: #020105;
-            background-image: radial-gradient(circle at 50% 18%, #1d103d 0%, #020105 72%);
+            background-color: #06040d;
+            background-image: radial-gradient(circle at 50% 14%, #1d103d 0%, #06040d 72%);
             margin: 0;
-            padding: 12px;
+            padding: 0;
+            width: 100%;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             color: #ffffff;
             user-select: none;
+            overflow-x: hidden;
         }
 
         .font-brand {
             font-family: 'Orbitron', sans-serif;
         }
 
-        /* إطار الهاتف المحمول */
-        .phone-frame {
+        .app-shell {
             width: 100%;
-            max-width: 398px;
-            height: 856px;
+            min-height: 100vh;
             background-color: var(--bg-dark);
-            border-radius: 44px;
-            border: 4px solid #241b3b;
-            box-shadow: 0 28px 75px -10px rgba(0, 0, 0, 0.95), 0 0 50px rgba(139, 92, 246, 0.25);
             position: relative;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
         }
@@ -50,15 +42,13 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* البطاقات الزجاجية الداكنة */
         .cyber-card {
-            background: linear-gradient(180deg, rgba(22, 15, 42, 0.9) 0%, rgba(13, 9, 26, 0.95) 100%);
+            background: linear-gradient(180deg, rgba(22, 15, 42, 0.92) 0%, rgba(13, 9, 26, 0.96) 100%);
             border: 1px solid rgba(139, 92, 246, 0.24);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 4px 16px rgba(0, 0, 0, 0.45);
             backdrop-filter: blur(12px);
         }
 
-        /* حلقة زر الطاقة ثلاثية الأبعاد المتوهجة */
         .power-outer-ring {
             background: radial-gradient(circle, rgba(147, 51, 234, 0.35) 0%, rgba(15, 10, 30, 0.95) 72%);
             border: 2px solid rgba(168, 85, 247, 0.55);
@@ -100,7 +90,6 @@
             50% { transform: scale(1.045); }
         }
 
-        /* توهج حرف X في الشعار */
         .x-glow {
             background: linear-gradient(135deg, #e879f9 0%, #9333ea 55%, #6b21a8 100%);
             -webkit-background-clip: text;
@@ -108,7 +97,6 @@
             filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.95));
         }
 
-        /* بطاقة البروتوكول */
         .protocol-card {
             background: rgba(16, 11, 31, 0.92);
             border: 1px solid rgba(139, 92, 246, 0.2);
@@ -120,7 +108,6 @@
             box-shadow: 0 0 18px rgba(168, 85, 247, 0.45);
         }
 
-        /* خلفية قسم البطل الواقعية والدخان البنفسجي */
         .hero-realistic-bg {
             background:
                 radial-gradient(circle at 22% 45%, rgba(147, 51, 234, 0.42) 0%, rgba(88, 28, 135, 0.18) 38%, transparent 68%),
@@ -140,7 +127,6 @@
             animation: smokeDrift 7s ease-in-out infinite;
         }
 
-        /* زر التبديل Switch */
         .toggle-switch {
             width: 40px;
             height: 21px;
@@ -180,47 +166,22 @@
 </head>
 <body>
 
-    <div class="phone-frame" id="phoneFrame">
+    <div class="app-shell" id="appShell">
 
-        <!-- إشعار منبثق داخلي -->
-        <div id="toast" class="absolute top-14 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2 w-[88%]">
+        <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2 w-[88%] max-w-md">
             <div class="bg-[#1b1236]/95 border border-purple-500/60 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-lg shadow-purple-950/70 flex items-center justify-center gap-2 text-center backdrop-blur-md">
                 <span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span>
                 <span id="toastText">تم التحديث بنجاح</span>
             </div>
         </div>
 
-        <!-- 1. شريط الحالة العلوي (9:41 يسار - الشبكة والواي فاي والبطارية 100% يمين) -->
-        <div class="flex items-center justify-between px-6 pt-3 pb-1 text-[11px] font-bold tracking-wide text-white z-20" dir="ltr">
-            <span>9:41</span>
-            <div class="w-24 h-5 bg-black rounded-full border border-white/5"></div>
-            <div class="flex items-center gap-1.5">
-                <div class="flex items-end gap-[1.5px] h-2.5">
-                    <span class="w-[2.5px] h-1 bg-white rounded-xs"></span>
-                    <span class="w-[2.5px] h-1.5 bg-white rounded-xs"></span>
-                    <span class="w-[2.5px] h-2 bg-white rounded-xs"></span>
-                    <span class="w-[2.5px] h-2.5 bg-white rounded-xs"></span>
-                </div>
-                <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 18c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm-4.9-2.3l1.4 1.4C9.4 16.4 10.6 16 12 16s2.6.4 3.5 1.1l1.4-1.4C15.6 14.6 13.9 14 12 14s-3.6.6-4.9 1.7zm-2.8-2.8l1.4 1.4C7.3 13 9.5 12 12 12s4.7 1 6.3 2.3l1.4-1.4C17.7 11.1 15 10 12 10s-5.7 1.1-7.7 2.9zM1.5 10.1l1.4 1.4C5.3 9.3 8.5 8 12 8s6.7 1.3 9.1 3.5l1.4-1.4C19.7 7.5 16 6 12 6s-7.7 1.5-10.5 4.1z"/>
-                </svg>
-                <div class="flex items-center">
-                    <div class="bg-white text-black text-[9px] font-black px-1 rounded-[3px] leading-tight">100</div>
-                    <div class="w-[2px] h-1.5 bg-white/70 rounded-r-xs ml-[1px]"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- الهيدر العلوي (قائمة يسار - شعار PROXY X وسط - زر PRO ذهبي يمين) -->
-        <header class="flex items-center justify-between px-4 py-1.5 z-20" dir="ltr">
-            <!-- زر القائمة على اليسار -->
+        <header class="flex items-center justify-between px-4 pt-3 pb-2 z-20" dir="ltr">
             <button onclick="toggleDrawer(true)" class="w-9 h-9 rounded-xl cyber-card flex items-center justify-center text-gray-200 hover:border-purple-500 transition active:scale-95" aria-label="القائمة">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16"/>
                 </svg>
             </button>
 
-            <!-- الشعار في المنتصف -->
             <div class="text-center">
                 <div class="font-brand text-[21px] font-black tracking-wider italic flex items-center justify-center gap-1 leading-none">
                     <span class="text-white drop-shadow">PROXY</span>
@@ -229,7 +190,6 @@
                 <p class="text-[7px] tracking-[0.23em] text-purple-200/75 font-bold mt-0.5">X • PRIVATE CONNECTION MANAGER</p>
             </div>
 
-            <!-- زر PRO الذهبي على اليمين -->
             <button onclick="openModal('proModal')" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-[#2c210b] to-[#3d2c0d] border border-amber-400/55 flex items-center gap-1 shadow-[0_0_16px_rgba(245,158,11,0.3)] hover:brightness-110 transition active:scale-95">
                 <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
@@ -238,32 +198,21 @@
             </button>
         </header>
 
-        <!-- المحتوى الرئيسي -->
-        <main class="flex-1 overflow-y-auto no-scrollbar px-3.5 pb-2 relative">
+        <main class="flex-1 overflow-y-auto no-scrollbar px-3.5 pb-4 relative max-w-3xl w-full mx-auto">
 
-            <!-- ================= تبويب الرئيسية (HOME) ================= -->
             <div id="tab-home" class="space-y-2.5">
 
-                <!-- 2. قسم البطل والاتصال المركزي (Hero & Center Power Section) -->
                 <div class="relative rounded-2xl pt-1 pb-0.5 overflow-visible">
-                    <!-- خلفية البطل الواقعية (الهكر المقنع + خريطة العالم الرقمية المنقطة + الدخان البنفسجي) -->
                     <div id="heroBgLayer" class="absolute -top-2 -left-3.5 -right-3.5 h-[228px] hero-realistic-bg overflow-hidden pointer-events-none rounded-b-3xl">
-                        <!-- صورة مخصصة اختيارية يرفعها المستخدم -->
                         <img id="customHeroImg" src="" alt="" class="hidden w-full h-full object-cover object-center opacity-90">
 
-                        <!-- المشهد الافتراضي الواقعي (SVG عالي التفاصيل + Canvas خريطة العالم المنقطة) -->
                         <div id="defaultHeroArtwork" class="relative w-full h-full">
-                            <!-- هالات الدخان البنفسجي خلف الكتفين -->
                             <div class="smoke-aura absolute -left-6 top-3 w-52 h-48 rounded-full bg-purple-600/35 blur-2xl"></div>
                             <div class="smoke-aura absolute left-10 top-10 w-40 h-40 rounded-full bg-fuchsia-600/25 blur-xl" style="animation-delay: -3s;"></div>
-
-                            <!-- خريطة العالم الرقمية المنقطة على اليمين خلف النصوص -->
                             <canvas id="worldMapCanvas" class="absolute right-0 top-1 w-[265px] h-[145px] opacity-90"></canvas>
 
-                            <!-- بورتريه الهاكر المقنع الواقعي ذو الطيات العميقة وقناع X المتوهج على اليسار -->
                             <svg viewBox="0 0 260 220" class="absolute -left-5 -top-2 w-[215px] h-[195px] drop-shadow-[0_10px_25px_rgba(0,0,0,0.95)]" preserveAspectRatio="xMidYMin slice">
                                 <defs>
-                                    <!-- تدرجات إضاءة القلنسوة والكتف الواقعية -->
                                     <radialGradient id="hoodOuterLight" cx="25%" cy="25%" r="75%">
                                         <stop offset="0%" stop-color="#581c87"/>
                                         <stop offset="35%" stop-color="#221042"/>
@@ -301,54 +250,32 @@
                                     </filter>
                                 </defs>
 
-                                <!-- الكتفان والسترة الداكنة مع ثنيات القماش -->
                                 <path d="M-10 215 C2 162, 34 142, 74 136 L146 136 C188 143, 218 164, 232 215 Z" fill="url(#hoodOuterLight)"/>
-                                <!-- طيات الأكتاف والصدر -->
                                 <path d="M12 212 C28 175, 52 156, 78 148 C65 170, 56 190, 52 212 Z" fill="url(#fabricFoldDark)"/>
                                 <path d="M206 212 C190 176, 166 158, 142 149 C155 170, 164 190, 168 212 Z" fill="url(#fabricFoldDark)"/>
                                 <path d="M76 144 C94 166, 126 166, 144 144 L152 212 L68 212 Z" fill="#06030e"/>
-                                <!-- خط إضاءة حافة الكتف الأيسر -->
                                 <path d="M-6 210 C6 162, 36 143, 74 137" fill="none" stroke="url(#rimHighlight)" stroke-width="2.2"/>
-
-                                <!-- القلنسوة الخارجية (Hood) بتفاصيل واقعية -->
                                 <path d="M48 148 C36 96, 54 22, 110 18 C164 22, 182 94, 170 148 C148 162, 72 162, 48 148 Z" fill="url(#hoodOuterLight)"/>
-                                <!-- إضاءة حافة القلنسوة اليسرى والعلوية -->
                                 <path d="M49 144 C38 92, 56 23, 110 19 C136 20, 155 34, 165 56" fill="none" stroke="url(#rimHighlight)" stroke-width="2.5" stroke-linecap="round"/>
-
-                                <!-- طيات القماش العميقة حول الرقبة والقلنسوة -->
                                 <path d="M44 134 C66 145, 92 150, 114 147 C90 156, 62 154, 46 146 Z" fill="#2e1065" opacity="0.65"/>
                                 <path d="M174 132 C154 144, 130 149, 108 147 C132 156, 158 154, 172 145 Z" fill="#170933" opacity="0.85"/>
                                 <path d="M54 118 C64 128, 76 135, 90 138" fill="none" stroke="#4c1d95" stroke-width="1.4" opacity="0.6"/>
-
-                                <!-- تجويف القلنسوة الداخلي المظلم -->
                                 <path d="M68 134 C60 92, 72 42, 110 40 C148 42, 160 92, 152 134 C132 144, 88 144, 68 134 Z" fill="url(#innerHoodVoid)" stroke="#1e0b3b" stroke-width="1.2"/>
-
-                                <!-- القناع الأسود داخل الظل -->
                                 <ellipse cx="111" cy="94" rx="31" ry="39" fill="#030207"/>
-                                <!-- انعكاس خافت جداً على القناع لإبراز العمق ثلاثي الأبعاد -->
                                 <path d="M88 74 C96 62, 124 62, 132 74" fill="none" stroke="#3b0764" stroke-width="1.2" opacity="0.45"/>
-
-                                <!-- علامة X النيون البنفسجية الحادة المتوهجة على القناع -->
                                 <g filter="url(#xMaskBloom)">
-                                    <!-- الهالة البنفسجية الخارجية -->
                                     <path d="M97 80 L125 108 M125 80 L97 108" stroke="#9333ea" stroke-width="7.5" stroke-linecap="round" opacity="0.75"/>
-                                    <!-- القلب النيون المضيء -->
                                     <path d="M97 80 L125 108 M125 80 L97 108" stroke="#e879f9" stroke-width="4" stroke-linecap="round"/>
                                     <path d="M97 80 L125 108 M125 80 L97 108" stroke="#ffffff" stroke-width="1.3" stroke-linecap="round" opacity="0.85"/>
                                 </g>
-
-                                <!-- تلاشي سفلي ناعم يندمج مع بطاقات الاتصال -->
                                 <rect x="0" y="110" width="260" height="110" fill="url(#bottomFadeMask)"/>
                             </svg>
                         </div>
 
-                        <!-- تدرج التلاشي السفلي الموحد -->
                         <div class="absolute inset-x-0 bottom-0 h-20 hero-bottom-vignette"></div>
                     </div>
 
-                    <!-- صف البانر: النص على اليمين (موضع مطابق للصورة) -->
                     <div class="relative flex items-center justify-between min-h-[124px] px-1">
-                        <!-- النص على اليمين -->
                         <div class="z-10 text-right max-w-[62%] pt-3 pr-1">
                             <h1 class="text-[19px] font-extrabold text-white drop-shadow-[0_2px_14px_rgba(0,0,0,0.95)] leading-snug">
                                 تصفح بحرية وأمان
@@ -357,14 +284,10 @@
                                 اتصال أسرع .. خصوصية أكبر .. بدون قيود
                             </p>
                         </div>
-
-                        <!-- مساحة فارغة على اليسار ليظهر بورتريه الهاكر في الخلفية بوضوح -->
                         <div class="w-36 h-32 flex-shrink-0"></div>
                     </div>
 
-                    <!-- لوحة الاتصال المركزية: الحالة يمين | زر الطاقة وسط | السرعة الحالية يسار -->
                     <div class="relative z-20 -mt-5 grid grid-cols-3 items-center gap-2">
-                        <!-- بطاقة الحالة (يمين) -->
                         <div class="cyber-card rounded-2xl py-2.5 px-2 text-center flex flex-col items-center justify-center h-[88px]">
                             <div class="flex items-end gap-[2.5px] h-4 mb-1.5">
                                 <span class="w-1 h-1.5 bg-emerald-400 rounded-xs"></span>
@@ -379,7 +302,6 @@
                             </div>
                         </div>
 
-                        <!-- دائرة الاتصال الكبيرة المتوهجة 3D (وسط) -->
                         <div class="flex justify-center">
                             <button id="powerBtn" onclick="toggleConnection()" class="power-outer-ring w-[122px] h-[122px] rounded-full p-2 flex items-center justify-center cursor-pointer">
                                 <div class="power-inner-ring w-full h-full rounded-full flex flex-col items-center justify-center">
@@ -391,7 +313,6 @@
                             </button>
                         </div>
 
-                        <!-- بطاقة السرعة الحالية (يسار) -->
                         <div class="cyber-card rounded-2xl py-2.5 px-2 text-center flex flex-col items-center justify-center h-[88px]">
                             <svg class="w-4 h-4 text-purple-400 mb-1.5 drop-shadow-[0_0_6px_rgba(168,85,247,0.8)]" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
@@ -402,7 +323,6 @@
                     </div>
                 </div>
 
-                <!-- 3. بطاقة "اختر البروتوكول" (6 بطاقات) -->
                 <div class="cyber-card rounded-2xl p-2.5">
                     <div class="flex items-center justify-between mb-2 px-0.5">
                         <div class="flex items-center gap-1.5">
@@ -414,9 +334,7 @@
                         <span class="text-[10px] text-purple-300/70">↗</span>
                     </div>
 
-                    <!-- صف البروتوكولات من اليمين لليسار: VLESS, VMess, Trojan, Shadowsocks, SOCKS5, WireGuard -->
                     <div class="grid grid-cols-6 gap-1.5" id="protocolGrid">
-                        <!-- 1) VLESS (محدد افتراضياً) -->
                         <button onclick="selectProtocol('VLESS', this)" class="protocol-card active rounded-xl py-2 px-0.5 flex flex-col items-center justify-center relative">
                             <span class="proto-check absolute -top-1.5 -right-1 w-4 h-4 rounded-full bg-purple-500 text-white flex items-center justify-center text-[9px] font-black shadow-[0_0_8px_#a855f7]">✓</span>
                             <svg class="w-6 h-6 mb-1" viewBox="0 0 24 24" fill="none">
@@ -431,7 +349,6 @@
                             <span class="text-[8.5px] font-bold text-white tracking-tight">VLESS</span>
                         </button>
 
-                        <!-- 2) VMess (طائرة ورقية سماوية) -->
                         <button onclick="selectProtocol('VMess', this)" class="protocol-card rounded-xl py-2 px-0.5 flex flex-col items-center justify-center relative">
                             <span class="proto-check hidden absolute -top-1.5 -right-1 w-4 h-4 rounded-full bg-purple-500 text-white flex items-center justify-center text-[9px] font-black shadow-[0_0_8px_#a855f7]">✓</span>
                             <svg class="w-5 h-5 mb-1.5 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
@@ -440,7 +357,6 @@
                             <span class="text-[8.5px] font-bold text-gray-300 tracking-tight">VMess</span>
                         </button>
 
-                        <!-- 3) Trojan (خوذة محارب حمراء) -->
                         <button onclick="selectProtocol('Trojan', this)" class="protocol-card rounded-xl py-2 px-0.5 flex flex-col items-center justify-center relative">
                             <span class="proto-check hidden absolute -top-1.5 -right-1 w-4 h-4 rounded-full bg-purple-500 text-white flex items-center justify-center text-[9px] font-black shadow-[0_0_8px_#a855f7]">✓</span>
                             <svg class="w-5 h-5 mb-1.5 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
@@ -449,7 +365,6 @@
                             <span class="text-[8.5px] font-bold text-gray-300 tracking-tight">Trojan</span>
                         </button>
 
-                        <!-- 4) Shadowsocks (طائرة ورقية رمادية/بيضاء) -->
                         <button onclick="selectProtocol('Shadowsocks', this)" class="protocol-card rounded-xl py-2 px-0.5 flex flex-col items-center justify-center relative">
                             <span class="proto-check hidden absolute -top-1.5 -right-1 w-4 h-4 rounded-full bg-purple-500 text-white flex items-center justify-center text-[9px] font-black shadow-[0_0_8px_#a855f7]">✓</span>
                             <svg class="w-5 h-5 mb-1.5 text-gray-200" fill="currentColor" viewBox="0 0 24 24">
@@ -458,7 +373,6 @@
                             <span class="text-[7px] font-bold text-gray-300 tracking-tighter">Shadowsocks</span>
                         </button>
 
-                        <!-- 5) SOCKS5 (عقد مترابطة زرقاء) -->
                         <button onclick="selectProtocol('SOCKS5', this)" class="protocol-card rounded-xl py-2 px-0.5 flex flex-col items-center justify-center relative">
                             <span class="proto-check hidden absolute -top-1.5 -right-1 w-4 h-4 rounded-full bg-purple-500 text-white flex items-center justify-center text-[9px] font-black shadow-[0_0_8px_#a855f7]">✓</span>
                             <svg class="w-5 h-5 mb-1.5 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -468,7 +382,6 @@
                             <span class="text-[8px] font-bold text-gray-300 tracking-tight">SOCKS5</span>
                         </button>
 
-                        <!-- 6) WireGuard (أيقونة تنين دائري أحمر) -->
                         <button onclick="selectProtocol('WireGuard', this)" class="protocol-card rounded-xl py-2 px-0.5 flex flex-col items-center justify-center relative">
                             <span class="proto-check hidden absolute -top-1.5 -right-1 w-4 h-4 rounded-full bg-purple-500 text-white flex items-center justify-center text-[9px] font-black shadow-[0_0_8px_#a855f7]">✓</span>
                             <div class="w-5 h-5 mb-1.5 rounded-full bg-red-600/90 border border-red-400/50 flex items-center justify-center shadow-[0_0_8px_rgba(220,38,38,0.6)]">
@@ -481,7 +394,6 @@
                     </div>
                 </div>
 
-                <!-- 4. بطاقة "إعدادات السيرفر" -->
                 <div class="cyber-card rounded-2xl p-2.5">
                     <div class="flex items-center justify-between mb-2 px-0.5">
                         <div class="flex items-center gap-1.5">
@@ -494,7 +406,6 @@
                         <span class="text-[10px] text-purple-300/70">↗</span>
                     </div>
 
-                    <!-- حقل إدخال رابط السيرفر مع أيقونة المشبك على اليسار -->
                     <div class="relative flex items-center bg-[#090614] border border-purple-500/25 rounded-xl px-3 py-2 mb-2 focus-within:border-purple-500 transition">
                         <input id="serverInput" type="text" placeholder="أدخل رابط السيرفر هنا..." class="w-full bg-transparent text-xs text-white placeholder-gray-400 focus:outline-none">
                         <button onclick="pasteSampleServer()" title="لصق رابط السيرفر" class="w-7 h-7 rounded-lg bg-[#17112b] border border-purple-500/20 flex items-center justify-center text-gray-300 hover:text-purple-300 flex-shrink-0 mr-2">
@@ -504,7 +415,6 @@
                         </button>
                     </div>
 
-                    <!-- 3 أزرار متجاورة: مسح الكل (يمين) | استيراد ملف (وسط) | مسح QR (يسار) -->
                     <div class="grid grid-cols-3 gap-2">
                         <button onclick="clearServerInput()" class="bg-[#17112b] hover:bg-[#21183d] border border-purple-500/20 rounded-xl py-2 px-1.5 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-gray-200 transition active:scale-95">
                             <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -529,10 +439,8 @@
                     </div>
                 </div>
 
-                <!-- 5. بطاقة "توجيه الاتصال" (يمين) و"الخيارات المتقدمة" (يسار) -->
                 <div class="cyber-card rounded-2xl p-2.5">
                     <div class="flex items-center justify-between">
-                        <!-- اليمين: توجيه الاتصال -->
                         <button onclick="cycleRoutingMode()" class="flex items-center gap-2 text-right">
                             <div class="w-8 h-8 rounded-full bg-indigo-950 border border-sky-400/35 flex items-center justify-center text-sky-400">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -549,7 +457,6 @@
                             </div>
                         </button>
 
-                        <!-- اليسار: الخيارات المتقدمة -->
                         <button onclick="toggleAdvancedOptions()" class="flex items-center gap-1.5 text-xs font-semibold text-gray-200 hover:text-purple-300 transition pl-1">
                             <span>الخيارات المتقدمة</span>
                             <svg id="advChevron" class="w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -558,7 +465,6 @@
                         </button>
                     </div>
 
-                    <!-- قائمة إعدادات DNS و MTU القابلة للفتح -->
                     <div id="advancedPanel" class="hidden mt-2.5 pt-2.5 border-t border-purple-500/15 space-y-2 text-xs">
                         <div class="flex items-center justify-between">
                             <span class="text-gray-300">خادم DNS المخصص (1.1.1.1)</span>
@@ -575,9 +481,7 @@
                     </div>
                 </div>
 
-                <!-- 6. بطاقة الرسم البياني المباشر للسرعة (الرفع والتحميل يمين + الموجة يسار) -->
                 <div class="cyber-card rounded-2xl p-2.5 flex items-center justify-between gap-2.5 overflow-hidden">
-                    <!-- الجزء الأيمن: رفع + تحميل -->
                     <div class="flex items-center gap-3 pr-1 flex-shrink-0">
                         <div class="text-center">
                             <div class="flex items-center justify-center gap-1 text-[11px] text-gray-200 font-semibold">
@@ -598,13 +502,11 @@
                         </div>
                     </div>
 
-                    <!-- الجزء الأيسر: موجة بيانية ناعمة متوهجة باللون البنفسجي -->
                     <div class="flex-1 h-12 relative rounded-xl bg-[#090614] border border-purple-500/20 overflow-hidden">
                         <canvas id="trafficCanvas" class="w-full h-full block"></canvas>
                     </div>
                 </div>
 
-                <!-- 7. شريط الاختصارات الأربعة من اليمين لليسار: حول التطبيق | الإعدادات | قناة المطور | متجر التطبيقات -->
                 <div class="grid grid-cols-4 gap-2">
                     <button onclick="openModal('aboutModal')" class="cyber-card hover:border-purple-500/50 rounded-2xl py-2.5 px-1 flex flex-col items-center justify-center gap-1.5 transition active:scale-95">
                         <div class="w-7 h-7 rounded-full border border-purple-400/60 flex items-center justify-center text-purple-300 font-bold text-xs">i</div>
@@ -634,7 +536,6 @@
                     </button>
                 </div>
 
-                <!-- 8. شريط التنبيه السفلي (Promo Banner) -->
                 <button onclick="openModal('proModal')" class="w-full rounded-xl bg-gradient-to-r from-[#180f30] via-[#2b1754] to-[#180f30] border border-purple-500/35 py-1.5 px-3 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(147,51,234,0.2)] hover:brightness-110 transition">
                     <span class="text-[10px] font-extrabold text-amber-300 bg-amber-500/15 border border-amber-400/30 px-1.5 py-0.5 rounded">تحديث PRO</span>
                     <span class="text-xs font-bold text-purple-100">اتصال آمن ... في كل مكان</span>
@@ -645,7 +546,6 @@
 
             </div>
 
-            <!-- ================= تبويب الحماية (SECURITY) ================= -->
             <div id="tab-security" class="hidden space-y-3 pt-2">
                 <div class="cyber-card rounded-2xl p-4 space-y-3.5">
                     <div class="flex items-center gap-2.5">
@@ -688,24 +588,22 @@
                 </div>
             </div>
 
-            <!-- ================= تبويب السجلات (LOGS) ================= -->
             <div id="tab-logs" class="hidden space-y-2.5 pt-2">
                 <div class="flex items-center justify-between">
                     <h2 class="text-sm font-extrabold text-white">سجلات الاتصال (Core Logs)</h2>
                     <button onclick="clearLogs()" class="text-[11px] bg-purple-900/40 border border-purple-500/30 px-2.5 py-1 rounded-lg text-purple-300">مسح السجل</button>
                 </div>
-                <div id="logsContainer" class="cyber-card rounded-2xl p-3 h-[540px] overflow-y-auto font-mono text-[10.5px] space-y-1.5 text-left" dir="ltr">
-                    <div class="text-purple-400">[SYSTEM] PROXY X Engine v4.2.0 ready.</div>
-                    <div class="text-gray-400">[CORE] Loaded VLESS, VMess, Trojan, Shadowsocks, SOCKS5, WireGuard.</div>
-                    <div class="text-gray-500">[IDLE] Awaiting user connection command...</div>
+                <div id="logsContainer" class="cyber-card rounded-2xl p-3 h-[500px] overflow-y-auto font-mono text-[10.5px] space-y-1.5 text-left" dir="ltr">
+                    <div class="text-purple-400">[SYSTEM] PROXY X Native Bridge initialized.</div>
+                    <div class="text-gray-400">[CORE] Protocols available: VLESS, VMess, Trojan, Shadowsocks, SOCKS5, WireGuard.</div>
+                    <div class="text-gray-500">[IDLE] Ready for VpnService tunnel control.</div>
                 </div>
             </div>
 
-            <!-- ================= تبويب الإحصائيات (STATS) ================= -->
             <div id="tab-stats" class="hidden space-y-3 pt-2">
                 <div class="cyber-card rounded-2xl p-4">
-                    <h2 class="text-sm font-extrabold text-white mb-1">إحصائيات استهلاك البيانات</h2>
-                    <p class="text-[11px] text-purple-300/80 mb-3">مراقبة حية لحركة البيانات وزمن الاستجابة</p>
+                    <h2 class="text-sm font-extrabold text-white mb-1">إحصائيات الجلسة والاتصال</h2>
+                    <p class="text-[11px] text-purple-300/80 mb-3">حالة النفق والبيانات المرسلة والمستقبلة</p>
 
                     <div class="grid grid-cols-2 gap-2.5">
                         <div class="bg-[#0b0818] border border-purple-500/20 rounded-xl p-3">
@@ -713,8 +611,8 @@
                             <div id="sessionTimer" class="text-base font-black text-purple-300 mt-0.5 font-brand" dir="ltr">00:00:00</div>
                         </div>
                         <div class="bg-[#0b0818] border border-purple-500/20 rounded-xl p-3">
-                            <span class="text-[10px] text-gray-400">زمن الاستجابة (Ping)</span>
-                            <div id="pingValue" class="text-base font-black text-emerald-400 mt-0.5 font-brand" dir="ltr">-- ms</div>
+                            <span class="text-[10px] text-gray-400">حالة النفق (TUN)</span>
+                            <div id="pingValue" class="text-base font-black text-emerald-400 mt-0.5 font-brand" dir="ltr">IDLE</div>
                         </div>
                         <div class="bg-[#0b0818] border border-purple-500/20 rounded-xl p-3">
                             <span class="text-[10px] text-gray-400">إجمالي التحميل</span>
@@ -734,21 +632,19 @@
                         <span id="statsProto" class="font-bold text-purple-400">VLESS</span>
                     </div>
                     <div class="flex justify-between text-xs border-b border-purple-500/15 pb-2">
-                        <span class="text-gray-400">عنوان IP الظاهري:</span>
-                        <span id="statsIp" class="font-bold text-gray-200 font-mono">غير متصل</span>
+                        <span class="text-gray-400">عنوان واجهة TUN:</span>
+                        <span id="statsIp" class="font-bold text-gray-200 font-mono">غير نشط</span>
                     </div>
                     <div class="flex justify-between text-xs">
-                        <span class="text-gray-400">موقع السيرفر:</span>
-                        <span class="font-bold text-emerald-400">فرانكفورت، ألمانيا 🇩🇪</span>
+                        <span class="text-gray-400">خادم DNS:</span>
+                        <span class="font-bold text-emerald-400">1.1.1.1</span>
                     </div>
                 </div>
             </div>
 
         </main>
 
-        <!-- 9. شريط التنقل السفلي من اليمين لليسار: الحماية | السجلات | الإحصائيات | الرئيسية -->
         <nav class="bg-[#090614]/95 border-t border-purple-500/20 px-4 pt-2 pb-3 grid grid-cols-4 gap-1 z-20 backdrop-blur-md">
-            <!-- 1) الحماية (يمين) -->
             <button onclick="switchTab('security')" id="nav-security" class="nav-btn flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-200 transition">
                 <div class="nav-icon-box w-8 h-8 rounded-xl flex items-center justify-center transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -758,7 +654,6 @@
                 <span class="text-[10px] font-semibold">الحماية</span>
             </button>
 
-            <!-- 2) السجلات -->
             <button onclick="switchTab('logs')" id="nav-logs" class="nav-btn flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-200 transition">
                 <div class="nav-icon-box w-8 h-8 rounded-xl flex items-center justify-center transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -768,7 +663,6 @@
                 <span class="text-[10px] font-semibold">السجلات</span>
             </button>
 
-            <!-- 3) الإحصائيات -->
             <button onclick="switchTab('stats')" id="nav-stats" class="nav-btn flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-200 transition">
                 <div class="nav-icon-box w-8 h-8 rounded-xl flex items-center justify-center transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -778,7 +672,6 @@
                 <span class="text-[10px] font-semibold">الإحصائيات</span>
             </button>
 
-            <!-- 4) الرئيسية (يسار - نشط افتراضياً داخل مربع بنفسجي متوهج) -->
             <button onclick="switchTab('home')" id="nav-home" class="nav-btn flex flex-col items-center justify-center gap-1 text-purple-300 transition">
                 <div class="nav-icon-box w-8 h-8 rounded-xl bg-purple-600/35 border border-purple-400/60 shadow-[0_0_14px_rgba(168,85,247,0.6)] flex items-center justify-center transition">
                     <svg class="w-4 h-4 text-purple-200" fill="currentColor" viewBox="0 0 24 24">
@@ -789,33 +682,28 @@
             </button>
         </nav>
 
-        <!-- خط السحب السفلي iOS -->
-        <div class="w-32 h-1 bg-white/30 rounded-full mx-auto mb-1.5"></div>
-
-        <!-- ================= القائمة الجانبية ================= -->
-        <div id="sideDrawerBackdrop" onclick="toggleDrawer(false)" class="hidden absolute inset-0 bg-black/75 z-40 backdrop-blur-xs"></div>
-        <aside id="sideDrawer" class="absolute top-0 bottom-0 left-0 w-64 bg-[#0d091c] border-r border-purple-500/30 z-50 transform -translate-x-full transition-transform duration-300 p-5 flex flex-col justify-between">
+        <div id="sideDrawerBackdrop" onclick="toggleDrawer(false)" class="hidden fixed inset-0 bg-black/75 z-40 backdrop-blur-xs"></div>
+        <aside id="sideDrawer" class="fixed top-0 bottom-0 left-0 w-64 bg-[#0d091c] border-r border-purple-500/30 z-50 transform -translate-x-full transition-transform duration-300 p-5 flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between mb-6 pt-4">
                     <div class="font-brand text-lg font-black italic">PROXY <span class="x-glow">X</span></div>
                     <button onclick="toggleDrawer(false)" class="text-gray-400 hover:text-white text-lg">✕</button>
                 </div>
                 <div class="space-y-2 text-xs font-semibold">
-                    <button onclick="toggleDrawer(false); pasteSampleServer()" class="w-full text-right p-3 rounded-xl bg-purple-900/25 border border-purple-500/20 text-purple-200 hover:bg-purple-900/40">⚡ استيراد سيرفر VIP سريع</button>
+                    <button onclick="toggleDrawer(false); pasteSampleServer()" class="w-full text-right p-3 rounded-xl bg-purple-900/25 border border-purple-500/20 text-purple-200 hover:bg-purple-900/40">⚡ تعبئة رابط إعداد تجريبي</button>
                     <button onclick="toggleDrawer(false); document.getElementById('heroBgUpload').click()" class="w-full text-right p-3 rounded-xl hover:bg-white/5 text-purple-300">🖼️ تغيير خلفية الواجهة (صورة مخصصة)</button>
                     <button id="resetHeroBgBtn" onclick="toggleDrawer(false); resetHeroBackground()" class="hidden w-full text-right p-3 rounded-xl hover:bg-white/5 text-gray-300">↺ استعادة الخلفية الافتراضية</button>
-                    <button onclick="toggleDrawer(false); switchTab('stats')" class="w-full text-right p-3 rounded-xl hover:bg-white/5 text-gray-200">📊 الإحصائيات المباشرة</button>
+                    <button onclick="toggleDrawer(false); switchTab('stats')" class="w-full text-right p-3 rounded-xl hover:bg-white/5 text-gray-200">📊 الإحصائيات وحالة TUN</button>
                     <button onclick="toggleDrawer(false); switchTab('security')" class="w-full text-right p-3 rounded-xl hover:bg-white/5 text-gray-200">🛡️ درع الحماية</button>
                     <button onclick="toggleDrawer(false); openModal('proModal')" class="w-full text-right p-3 rounded-xl hover:bg-white/5 text-amber-300">👑 ترقية الحساب إلى PRO</button>
                 </div>
             </div>
             <input type="file" id="heroBgUpload" accept="image/*" class="hidden" onchange="handleHeroBgUpload(event)">
-            <div class="text-[10px] text-gray-500 text-center">PROXY X • v4.2.0</div>
+            <div class="text-[10px] text-gray-500 text-center">PROXY X • Native Core Bridge</div>
         </aside>
 
-        <!-- ================= نافذة مسح QR ================= -->
-        <div id="qrModal" class="hidden absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-5 backdrop-blur-sm">
-            <div class="cyber-card rounded-3xl p-5 w-full text-center space-y-4 border-purple-500/50">
+        <div id="qrModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-5 backdrop-blur-sm">
+            <div class="cyber-card rounded-3xl p-5 w-full max-w-sm text-center space-y-4 border-purple-500/50">
                 <h3 class="text-sm font-extrabold text-white">ماسح رمز QR للسيرفر</h3>
                 <div class="relative w-48 h-48 mx-auto rounded-2xl bg-[#07050e] border-2 border-purple-500/60 flex items-center justify-center overflow-hidden">
                     <div class="qr-laser"></div>
@@ -823,35 +711,34 @@
                         <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h3v2h-3v-2zm-3 0h2v3h-2v-3zm3 3h3v3h-3v-3zm-3 3h2v2h-2v-2zm3 2h3v1h-3v-1z"/>
                     </svg>
                 </div>
-                <p class="text-[11px] text-gray-300">وجه الكاميرا نحو رمز QR أو اضغط محاكاة الالتقاط</p>
+                <p class="text-[11px] text-gray-300">لربط الكاميرا الحقيقية بالكود لاحقاً عبر CameraX / ML Kit</p>
                 <div class="flex gap-2">
-                    <button onclick="simulateQrSuccess()" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold py-2.5 rounded-xl">محاكاة الالتقاط</button>
+                    <button onclick="simulateQrSuccess()" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold py-2.5 rounded-xl">إدخال رابط سريع</button>
                     <button onclick="closeModal('qrModal')" class="px-4 bg-white/10 text-gray-300 text-xs font-bold py-2.5 rounded-xl">إغلاق</button>
                 </div>
             </div>
         </div>
 
-        <!-- ================= نوافذ الاختصارات الأربعة و PRO ================= -->
-        <div id="proModal" class="hidden absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-5 backdrop-blur-sm">
-            <div class="cyber-card rounded-3xl p-5 w-full text-center space-y-3 border-amber-400/50">
+        <div id="proModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-5 backdrop-blur-sm">
+            <div class="cyber-card rounded-3xl p-5 w-full max-w-sm text-center space-y-3 border-amber-400/50">
                 <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center text-amber-400 text-2xl">👑</div>
                 <h3 class="text-base font-black text-amber-300">تحديث PROXY X PRO</h3>
-                <p class="text-xs text-gray-300 leading-relaxed">سيرفرات خاصة فائقة السرعة للألعاب والبث بدون قيود مع تشفير مزدوج وحماية كاملة.</p>
-                <button onclick="closeModal('proModal'); showToast('تم تفعيل عضوية PRO التجريبية بنجاح!')" class="w-full bg-gradient-to-r from-amber-500 to-yellow-600 text-black font-extrabold text-xs py-3 rounded-xl shadow-lg">تفعيل الآن مجاناً</button>
+                <p class="text-xs text-gray-300 leading-relaxed">إعدادات متقدمة للنواة والأداء العالي قابل للتخصيص ضمن التطوير المستقبلي للتطبيق.</p>
+                <button onclick="closeModal('proModal'); showToast('تم تفعيل وضع PRO محلياً')" class="w-full bg-gradient-to-r from-amber-500 to-yellow-600 text-black font-extrabold text-xs py-3 rounded-xl shadow-lg">تفعيل</button>
                 <button onclick="closeModal('proModal')" class="w-full text-gray-400 text-xs py-1">إغلاق</button>
             </div>
         </div>
 
-        <div id="aboutModal" class="hidden absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-5 backdrop-blur-sm">
-            <div class="cyber-card rounded-3xl p-5 w-full text-center space-y-3 border-purple-500/50">
+        <div id="aboutModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-5 backdrop-blur-sm">
+            <div class="cyber-card rounded-3xl p-5 w-full max-w-sm text-center space-y-3 border-purple-500/50">
                 <div class="font-brand text-xl font-black italic">PROXY <span class="x-glow">X</span></div>
-                <p class="text-xs text-gray-300 leading-relaxed">تطبيق إدارة الاتصالات الآمنة (VLESS / VMess / Trojan / WireGuard) المصمم لتوفير أقصى درجات الخصوصية والسرعة.</p>
+                <p class="text-xs text-gray-300 leading-relaxed">تطبيق أندرويد مبني على VpnService وجسر WebView لتوفير بنية قابلة للتطوير مع بروتوكولات VLESS وVMess وTrojan وShadowsocks وSOCKS5 وWireGuard.</p>
                 <button onclick="closeModal('aboutModal')" class="w-full bg-purple-600 text-white font-bold text-xs py-2.5 rounded-xl">حسناً</button>
             </div>
         </div>
 
-        <div id="settingsModal" class="hidden absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-5 backdrop-blur-sm">
-            <div class="cyber-card rounded-3xl p-5 w-full text-right space-y-3 border-purple-500/50">
+        <div id="settingsModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-5 backdrop-blur-sm">
+            <div class="cyber-card rounded-3xl p-5 w-full max-w-sm text-right space-y-3 border-purple-500/50">
                 <h3 class="text-sm font-extrabold text-white text-center">إعدادات التطبيق العامة</h3>
                 <div class="flex items-center justify-between text-xs py-1">
                     <span class="text-gray-300">الاتصال التلقائي عند التشغيل</span>
@@ -865,23 +752,23 @@
             </div>
         </div>
 
-        <div id="devModal" class="hidden absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-5 backdrop-blur-sm">
-            <div class="cyber-card rounded-3xl p-5 w-full text-center space-y-3 border-purple-500/50">
+        <div id="devModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-5 backdrop-blur-sm">
+            <div class="cyber-card rounded-3xl p-5 w-full max-w-sm text-center space-y-3 border-purple-500/50">
                 <div class="w-11 h-11 mx-auto rounded-full bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-400">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                 </div>
-                <h3 class="text-sm font-extrabold text-white">قناة المطور الرسمية</h3>
-                <p class="text-xs text-gray-300">تابع آخر التحديثات والسيرفرات المجانية اليومية عبر قناتنا على تيليجرام.</p>
-                <button onclick="closeModal('devModal'); showToast('تم نسخ رابط القناة @ProxyX_Official')" class="w-full bg-purple-600 text-white font-bold text-xs py-2.5 rounded-xl">انضمام إلى القناة</button>
+                <h3 class="text-sm font-extrabold text-white">قناة المطور</h3>
+                <p class="text-xs text-gray-300">تابع تطوير النواة وإضافات البروتوكولات في مشروعك خطوة بخطوة.</p>
+                <button onclick="closeModal('devModal'); showToast('تم نسخ المعرف @ProxyX_Official')" class="w-full bg-purple-600 text-white font-bold text-xs py-2.5 rounded-xl">نسخ المعرف</button>
                 <button onclick="closeModal('devModal')" class="w-full text-gray-400 text-xs">إغلاق</button>
             </div>
         </div>
 
-        <div id="storeModal" class="hidden absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-5 backdrop-blur-sm">
-            <div class="cyber-card rounded-3xl p-5 w-full text-center space-y-3 border-purple-500/50">
-                <h3 class="text-sm font-extrabold text-white">متجر التطبيقات والإضافات</h3>
-                <p class="text-xs text-gray-300">استكشف حزم السيرفرات السريعة وإضافات الحماية المتقدمة من متجر PROXY X.</p>
-                <button onclick="closeModal('storeModal'); showToast('تم تحديث قائمة المتجر')" class="w-full bg-purple-600 text-white font-bold text-xs py-2.5 rounded-xl">تصفح المتجر</button>
+        <div id="storeModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-5 backdrop-blur-sm">
+            <div class="cyber-card rounded-3xl p-5 w-full max-w-sm text-center space-y-3 border-purple-500/50">
+                <h3 class="text-sm font-extrabold text-white">الإضافات والوحدات</h3>
+                <p class="text-xs text-gray-300">جاهز لدمج وحدات النواة والقواعد المخصصة في إصداراتك القادمة.</p>
+                <button onclick="closeModal('storeModal'); showToast('تم تحديث الحالة')" class="w-full bg-purple-600 text-white font-bold text-xs py-2.5 rounded-xl">حسناً</button>
                 <button onclick="closeModal('storeModal')" class="w-full text-gray-400 text-xs">إغلاق</button>
             </div>
         </div>
@@ -899,7 +786,11 @@
             totalUpMB: 0
         };
 
-        let metricsInterval = null;
+        let sessionInterval = null;
+
+        function hasNativeBridge() {
+            return typeof window.ProxyXBridge !== 'undefined';
+        }
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
@@ -927,41 +818,38 @@
             document.getElementById('logsContainer').innerHTML = '<div class="text-purple-400">[SYSTEM] Logs cleared.</div>';
         }
 
-        function toggleConnection() {
+        function applyUiState(newState, detailMsg) {
             const btn = document.getElementById('powerBtn');
             const label = document.getElementById('powerBtnLabel');
             const statusDot = document.getElementById('statusDot');
             const statusText = document.getElementById('statusText');
             const speedText = document.getElementById('currentSpeedText');
 
-            if (appState.status === 'disconnected') {
+            if (newState === 'connecting') {
                 appState.status = 'connecting';
+                btn.classList.remove('connected');
                 btn.classList.add('connecting');
                 label.textContent = 'جاري...';
                 statusDot.className = 'w-2 h-2 rounded-full bg-yellow-400 animate-ping';
                 statusText.className = 'text-[11px] font-bold text-yellow-400';
-                statusText.textContent = 'جاري الاتصال...';
-
-                addLog(appState.protocol, 'Connecting to secure gateway...', 'text-yellow-400');
-
-                setTimeout(() => {
-                    if (appState.status !== 'connecting') return;
-                    appState.status = 'connected';
-                    btn.classList.remove('connecting');
-                    btn.classList.add('connected');
-                    label.textContent = 'متصل';
-                    statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]';
-                    statusText.className = 'text-[11px] font-bold text-emerald-400';
-                    statusText.textContent = 'متصل';
-                    document.getElementById('signalBar4').classList.remove('bg-emerald-400/30');
-                    document.getElementById('signalBar4').classList.add('bg-emerald-400');
-
-                    document.getElementById('statsIp').textContent = '185.220.101.44 (DE)';
-                    document.getElementById('pingValue').textContent = '38 ms';
-                    addLog('CONNECTED', `Tunnel active via ${appState.protocol} (38ms)`, 'text-emerald-400');
-                    showToast(`متصل الآن عبر بروتوكول ${appState.protocol}`);
-                    startLiveMetrics();
-                }, 1100);
+                statusText.textContent = 'جاري التهيئة...';
+                addLog(appState.protocol, detailMsg || 'Requesting VPN permission & TUN interface...', 'text-yellow-400');
+            } else if (newState === 'connected') {
+                appState.status = 'connected';
+                btn.classList.remove('connecting');
+                btn.classList.add('connected');
+                label.textContent = 'متصل';
+                statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]';
+                statusText.className = 'text-[11px] font-bold text-emerald-400';
+                statusText.textContent = 'متصل';
+                document.getElementById('signalBar4').classList.remove('bg-emerald-400/30');
+                document.getElementById('signalBar4').classList.add('bg-emerald-400');
+                document.getElementById('statsIp').textContent = '10.66.0.2/32';
+                document.getElementById('pingValue').textContent = 'TUN UP';
+                speedText.textContent = 'TUN ACTIVE';
+                addLog('VPN_SERVICE', detailMsg || `TUN established (${appState.protocol})`, 'text-emerald-400');
+                showToast(detailMsg || `تم تفعيل اتصال ${appState.protocol}`);
+                startSessionClock();
             } else {
                 appState.status = 'disconnected';
                 btn.classList.remove('connecting', 'connected');
@@ -973,39 +861,48 @@
                 speedText.textContent = '-- MB/s';
                 document.getElementById('uploadSpeed').textContent = '0 KB/s';
                 document.getElementById('downloadSpeed').textContent = '0 KB/s';
-                document.getElementById('statsIp').textContent = 'غير متصل';
-                document.getElementById('pingValue').textContent = '-- ms';
-
-                clearInterval(metricsInterval);
-                addLog('DISCONNECTED', 'Connection terminated by user.', 'text-red-400');
-                showToast('تم قطع الاتصال');
+                document.getElementById('statsIp').textContent = 'غير نشط';
+                document.getElementById('pingValue').textContent = 'IDLE';
+                clearInterval(sessionInterval);
+                addLog('VPN_SERVICE', detailMsg || 'VPN tunnel stopped.', 'text-red-400');
+                if (detailMsg) showToast(detailMsg);
             }
         }
 
-        function startLiveMetrics() {
-            clearInterval(metricsInterval);
-            metricsInterval = setInterval(() => {
-                if (appState.status !== 'connected') return;
+        window.onNativeVpnState = function(state, message) {
+            applyUiState(state, message);
+        };
 
+        function toggleConnection() {
+            const server = document.getElementById('serverInput').value.trim();
+            const routing = appState.routingModes[appState.routingIndex];
+
+            if (appState.status === 'disconnected') {
+                applyUiState('connecting', `Protocol=${appState.protocol} | Routing=${routing}`);
+                if (hasNativeBridge()) {
+                    window.ProxyXBridge.connectVpn(appState.protocol, server, routing);
+                } else {
+                    setTimeout(() => applyUiState('connected', 'وضع المعاينة في المتصفح (بدون VpnService)'), 700);
+                }
+            } else {
+                if (hasNativeBridge()) {
+                    window.ProxyXBridge.disconnectVpn();
+                } else {
+                    applyUiState('disconnected', 'تم إيقاف الاتصال');
+                }
+            }
+        }
+
+        function startSessionClock() {
+            clearInterval(sessionInterval);
+            sessionInterval = setInterval(() => {
+                if (appState.status !== 'connected') return;
                 appState.secondsConnected++;
                 const hrs = String(Math.floor(appState.secondsConnected / 3600)).padStart(2, '0');
                 const mins = String(Math.floor((appState.secondsConnected % 3600) / 60)).padStart(2, '0');
                 const secs = String(appState.secondsConnected % 60).padStart(2, '0');
                 document.getElementById('sessionTimer').textContent = `${hrs}:${mins}:${secs}`;
-
-                const downMB = (Math.random() * 15 + 5.2).toFixed(1);
-                const upKB = Math.floor(Math.random() * 520 + 140);
-                const downKB = Math.floor(downMB * 1024);
-
-                document.getElementById('currentSpeedText').textContent = `${downMB} MB/s`;
-                document.getElementById('downloadSpeed').textContent = `${downKB} KB/s`;
-                document.getElementById('uploadSpeed').textContent = `${upKB} KB/s`;
-
-                appState.totalDownMB += parseFloat(downMB) * 0.25;
-                appState.totalUpMB += (upKB / 1024) * 0.25;
-                document.getElementById('totalDownloaded').textContent = `${appState.totalDownMB.toFixed(2)} MB`;
-                document.getElementById('totalUploaded').textContent = `${appState.totalUpMB.toFixed(2)} MB`;
-            }, 900);
+            }, 1000);
         }
 
         function selectProtocol(name, element) {
@@ -1023,9 +920,9 @@
         }
 
         function pasteSampleServer() {
-            const sample = `vless://b7e91a20-8c4f-4d1b-9e11-proxyx@de-fra01.proxyx.net:443?encryption=none&security=tls&sni=cdn.proxyx.net#PROXY-X-VIP`;
+            const sample = `vless://00000000-0000-0000-0000-000000000000@example.com:443?encryption=none&security=tls&sni=example.com#PROXY-X`;
             document.getElementById('serverInput').value = sample;
-            showToast('تم استيراد رابط السيرفر بنجاح');
+            showToast('تم إدخال رابط السيرفر');
         }
 
         function clearServerInput() {
@@ -1035,19 +932,20 @@
 
         function importConfigFile() {
             pasteSampleServer();
-            showToast('تم استيراد ملف الإعدادات بنجاح');
+            showToast('تم تحميل إعداد السيرفر');
         }
 
         function simulateQrSuccess() {
             closeModal('qrModal');
             pasteSampleServer();
-            showToast('تم مسح رمز QR وإضافة السيرفر!');
+            showToast('تمت إضافة رابط السيرفر');
         }
 
         function cycleRoutingMode() {
             appState.routingIndex = (appState.routingIndex + 1) % appState.routingModes.length;
             const mode = appState.routingModes[appState.routingIndex];
             document.getElementById('routingModeText').textContent = mode;
+            addLog('ROUTING', `Mode set to: ${mode}`, 'text-sky-300');
             showToast(`توجيه الاتصال: ${mode}`);
         }
 
@@ -1099,7 +997,7 @@
                 img.classList.remove('hidden');
                 document.getElementById('defaultHeroArtwork').classList.add('hidden');
                 document.getElementById('resetHeroBgBtn').classList.remove('hidden');
-                showToast('تم تحديث صورة الخلفية بنجاح');
+                showToast('تم تحديث صورة الخلفية');
             };
             reader.readAsDataURL(file);
         }
@@ -1124,21 +1022,13 @@
             canvas.height = h * dpr;
             ctx.scale(dpr, dpr);
 
-            // إحداثيات تقريبية للقارات لرسم خريطة عالم رقمية منقطة دقيقة
             const continents = [
-                // أمريكا الشمالية
                 [[0.08,0.20],[0.24,0.16],[0.32,0.24],[0.27,0.38],[0.21,0.46],[0.15,0.40],[0.10,0.30]],
-                // جرينلاند
                 [[0.33,0.10],[0.41,0.09],[0.39,0.18],[0.33,0.17]],
-                // أمريكا الجنوبية
                 [[0.23,0.52],[0.32,0.55],[0.35,0.68],[0.28,0.86],[0.24,0.84],[0.22,0.66]],
-                // أوروبا
                 [[0.45,0.18],[0.58,0.15],[0.60,0.28],[0.52,0.34],[0.45,0.31]],
-                // أفريقيا
                 [[0.45,0.37],[0.58,0.38],[0.62,0.52],[0.56,0.74],[0.50,0.73],[0.46,0.54],[0.43,0.45]],
-                // آسيا
                 [[0.60,0.16],[0.88,0.18],[0.93,0.32],[0.85,0.47],[0.74,0.50],[0.64,0.42],[0.60,0.28]],
-                // أستراليا
                 [[0.79,0.62],[0.90,0.62],[0.91,0.75],[0.80,0.76]]
             ];
 
@@ -1234,6 +1124,9 @@
         window.onload = function() {
             initWorldMapDots();
             initWaveform();
+            if (hasNativeBridge() && window.ProxyXBridge.getStatus() === 'connected') {
+                applyUiState('connected', 'النفق نشط مسبقاً');
+            }
         };
     </script>
 </body>
