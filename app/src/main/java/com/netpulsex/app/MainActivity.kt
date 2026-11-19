@@ -11,6 +11,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import org.json.JSONObject
 import java.lang.ref.WeakReference
 
 class MainActivity : Activity() {
@@ -19,6 +20,7 @@ class MainActivity : Activity() {
     private var pendingProtocol: String = "VLESS"
     private var pendingServer: String = ""
     private var pendingRouting: String = "افتراضي"
+    private var pendingDns: String = "1.1.1.1"
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,14 +41,9 @@ class MainActivity : Activity() {
                     val msg = if (ProxyXVpnService.isRunning) {
                         "النفق نشط عبر ${ProxyXVpnService.activeProtocol} (${ProxyXVpnService.activeEndpoint})"
                     } else {
-                        "المحرك جاهز لإدخال السيرفر والاتصال"
+                        "المحرك جاهز لفحص البلد والـ IP والاتصال"
                     }
-                    notifyJsStatus(
-                        state,
-                        msg,
-                        ProxyXVpnService.activeEndpoint,
-                        ProxyXVpnService.lastLatencyMs
-                    )
+                    notifyJsStatus(state, msg)
                 }
             }
             webChromeClient = WebChromeClient()
@@ -57,17 +54,18 @@ class MainActivity : Activity() {
         setContentView(webView)
     }
 
-    private fun requestOrStartVpn(protocol: String, server: String, routing: String) {
+    private fun requestOrStartVpn(protocol: String, server: String, routing: String, dns: String) {
         val parsed = ServerConfigParser.parse(protocol, server)
         if (parsed.isFailure) {
             val errMsg = parsed.exceptionOrNull()?.message ?: "رابط السيرفر غير صالح"
-            notifyJsStatus("disconnected", errMsg, "", -1L)
+            notifyJsStatus("disconnected", errMsg)
             return
         }
 
         pendingProtocol = protocol
         pendingServer = server
         pendingRouting = routing
+        pendingDns = dns.trim().ifEmpty { "1.1.1.1" }
 
         val prepareIntent = VpnService.prepare(this)
         if (prepareIntent != null) {
@@ -86,7 +84,7 @@ class MainActivity : Activity() {
             if (resultCode == RESULT_OK) {
                 launchVpnService()
             } else {
-                notifyJsStatus("disconnected", "تم رفض إذن VPN من النظام", "", -1L)
+                notifyJsStatus("disconnected", "تم رفض إذن VPN من النظام")
             }
         }
     }
@@ -97,6 +95,7 @@ class MainActivity : Activity() {
             putExtra(ProxyXVpnService.EXTRA_PROTOCOL, pendingProtocol)
             putExtra(ProxyXVpnService.EXTRA_SERVER, pendingServer)
             putExtra(ProxyXVpnService.EXTRA_ROUTING, pendingRouting)
+            putExtra(ProxyXVpnService.EXTRA_DNS, pendingDns)
         }
         startService(intent)
     }
@@ -106,13 +105,24 @@ class MainActivity : Activity() {
             action = ProxyXVpnService.ACTION_STOP
         }
         startService(intent)
-        notifyJsStatus("disconnected", "تم إيقاف خدمة VPN", "", -1L)
+        notifyJsStatus("disconnected", "تم إيقاف خدمة VPN")
     }
 
-    fun notifyJsStatus(state: String, message: String, endpoint: String, latencyMs: Long) {
-        val safeMsg = message.replace("\\", "\\\\").replace("'", "\\'")
-        val safeEp = endpoint.replace("\\", "\\\\").replace("'", "\\'")
-        val js = "if (window.onNativeVpnState) { window.onNativeVpnState('$state', '$safeMsg', '$safeEp', $latencyMs); }"
+    fun notifyJsStatus(state: String, message: String) {
+        val payload = JSONObject().apply {
+            put("state", state)
+            put("message", message)
+            put("endpoint", ProxyXVpnService.activeEndpoint)
+            put("latencyMs", ProxyXVpnService.lastLatencyMs)
+            put("beforeIp", ProxyXVpnService.beforeIp)
+            put("beforeCountry", ProxyXVpnService.beforeCountry)
+            put("afterIp", ProxyXVpnService.afterIp)
+            put("afterCountry", ProxyXVpnService.afterCountry)
+            put("ipChanged", ProxyXVpnService.ipChanged)
+            put("dns", ProxyXVpnService.activeDns)
+        }
+        val safeJson = JSONObject.quote(payload.toString())
+        val js = "if (window.onNativeVpnState) { window.onNativeVpnState($safeJson); }"
         runOnUiThread {
             if (this::webView.isInitialized) {
                 webView.evaluateJavascript(js, null)
@@ -122,9 +132,9 @@ class MainActivity : Activity() {
 
     inner class ProxyXBridge {
         @JavascriptInterface
-        fun connectVpn(protocol: String, server: String, routing: String) {
+        fun connectVpn(protocol: String, server: String, routing: String, dns: String) {
             runOnUiThread {
-                requestOrStartVpn(protocol, server, routing)
+                requestOrStartVpn(protocol, server, routing, dns)
             }
         }
 
@@ -138,6 +148,27 @@ class MainActivity : Activity() {
         @JavascriptInterface
         fun getStatus(): String {
             return if (ProxyXVpnService.isRunning) "connected" else "disconnected"
+        }
+
+        @JavascriptInterface
+        fun getTrafficJson(): String {
+            val (txNow, rxNow) = ProxyTunnelEngine.getUidTrafficBytes()
+            val txDelta = if (ProxyXVpnService.isRunning && txNow >= ProxyXVpnService.sessionStartTxBytes) {
+                txNow - ProxyXVpnService.sessionStartTxBytes
+            } else {
+                0L
+            }
+            val rxDelta = if (ProxyXVpnService.isRunning && rxNow >= ProxyXVpnService.sessionStartRxBytes) {
+                rxNow - ProxyXVpnService.sessionStartRxBytes
+            } else {
+                0L
+            }
+            return JSONObject().apply {
+                put("txBytes", txDelta)
+                put("rxBytes", rxDelta)
+                put("totalTxBytes", txNow)
+                put("totalRxBytes", rxNow)
+            }.toString()
         }
     }
 
@@ -162,8 +193,8 @@ class MainActivity : Activity() {
         private const val VPN_REQUEST_CODE = 1001
         private var activeActivityRef: WeakReference<MainActivity>? = null
 
-        fun dispatchStatusToUi(state: String, message: String, endpoint: String, latencyMs: Long) {
-            activeActivityRef?.get()?.notifyJsStatus(state, message, endpoint, latencyMs)
+        fun dispatchStatusToUi(state: String, message: String) {
+            activeActivityRef?.get()?.notifyJsStatus(state, message)
         }
     }
 }

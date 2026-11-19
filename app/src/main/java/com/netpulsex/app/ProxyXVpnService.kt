@@ -22,20 +22,23 @@ class ProxyXVpnService : VpnService() {
                 val protocol = intent?.getStringExtra(EXTRA_PROTOCOL) ?: "VLESS"
                 val serverUri = intent?.getStringExtra(EXTRA_SERVER) ?: ""
                 val routing = intent?.getStringExtra(EXTRA_ROUTING) ?: "افتراضي"
-                startTunnel(protocol, serverUri, routing)
+                val dnsServer = intent?.getStringExtra(EXTRA_DNS) ?: "1.1.1.1"
+                startTunnel(protocol, serverUri, routing, dnsServer)
                 return START_STICKY
             }
         }
     }
 
-    private fun startTunnel(protocol: String, serverUri: String, routing: String) {
+    private fun startTunnel(protocol: String, serverUri: String, routing: String, dnsServer: String) {
         val parsedResult = ServerConfigParser.parse(protocol, serverUri)
         val config = parsedResult.getOrElse { err ->
             isRunning = false
             lastError = err.message ?: "إعداد السيرفر غير صالح"
-            MainActivity.dispatchStatusToUi("disconnected", lastError, "", -1L)
+            MainActivity.dispatchStatusToUi("disconnected", lastError)
             return
         }
+
+        val validDns = dnsServer.trim().ifEmpty { "1.1.1.1" }
 
         if (vpnInterface == null) {
             try {
@@ -43,14 +46,14 @@ class ProxyXVpnService : VpnService() {
                     .setSession("PROXY X (${config.protocol})")
                     .addAddress("10.66.0.2", 32)
                     .addRoute("0.0.0.0", 0)
-                    .addDnsServer("1.1.1.1")
+                    .addDnsServer(validDns)
                     .setMtu(1420)
 
                 vpnInterface = builder.establish()
             } catch (e: Exception) {
                 isRunning = false
                 lastError = "تعذر إنشاء واجهة TUN: ${e.message ?: "خطأ"}"
-                MainActivity.dispatchStatusToUi("disconnected", lastError, "", -1L)
+                MainActivity.dispatchStatusToUi("disconnected", lastError)
                 return
             }
         }
@@ -58,23 +61,28 @@ class ProxyXVpnService : VpnService() {
         executor.execute {
             val probe = ProxyTunnelEngine.establishConnection(applicationContext, config)
             if (probe.ok) {
+                val (txStart, rxStart) = ProxyTunnelEngine.getUidTrafficBytes()
+                sessionStartTxBytes = txStart
+                sessionStartRxBytes = rxStart
+
                 isRunning = true
                 lastError = ""
                 activeProtocol = config.protocol
                 activeServer = config.rawInput
                 activeRouting = routing
+                activeDns = validDns
                 activeEndpoint = "${config.host}:${config.port}"
                 lastLatencyMs = probe.latencyMs
-                MainActivity.dispatchStatusToUi(
-                    "connected",
-                    probe.detail,
-                    activeEndpoint,
-                    probe.latencyMs
-                )
+                beforeIp = probe.beforeIp
+                beforeCountry = probe.beforeCountry
+                afterIp = probe.afterIp
+                afterCountry = probe.afterCountry
+                ipChanged = probe.ipChanged
+                MainActivity.dispatchStatusToUi("connected", probe.detail)
             } else {
                 stopTunnel()
                 lastError = probe.detail
-                MainActivity.dispatchStatusToUi("disconnected", probe.detail, "", -1L)
+                MainActivity.dispatchStatusToUi("disconnected", probe.detail)
             }
         }
     }
@@ -103,6 +111,7 @@ class ProxyXVpnService : VpnService() {
         const val EXTRA_PROTOCOL = "extra_protocol"
         const val EXTRA_SERVER = "extra_server"
         const val EXTRA_ROUTING = "extra_routing"
+        const val EXTRA_DNS = "extra_dns"
 
         @Volatile
         var isRunning: Boolean = false
@@ -121,6 +130,10 @@ class ProxyXVpnService : VpnService() {
             private set
 
         @Volatile
+        var activeDns: String = "1.1.1.1"
+            private set
+
+        @Volatile
         var activeEndpoint: String = ""
             private set
 
@@ -130,6 +143,34 @@ class ProxyXVpnService : VpnService() {
 
         @Volatile
         var lastError: String = ""
+            private set
+
+        @Volatile
+        var beforeIp: String = "غير معروف"
+            private set
+
+        @Volatile
+        var beforeCountry: String = "غير معروف"
+            private set
+
+        @Volatile
+        var afterIp: String = "غير معروف"
+            private set
+
+        @Volatile
+        var afterCountry: String = "غير معروف"
+            private set
+
+        @Volatile
+        var ipChanged: Boolean = false
+            private set
+
+        @Volatile
+        var sessionStartTxBytes: Long = 0L
+            private set
+
+        @Volatile
+        var sessionStartRxBytes: Long = 0L
             private set
     }
 }

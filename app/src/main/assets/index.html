@@ -536,14 +536,6 @@
                     </button>
                 </div>
 
-                <button onclick="openModal('proModal')" class="w-full rounded-xl bg-gradient-to-r from-[#180f30] via-[#2b1754] to-[#180f30] border border-purple-500/35 py-1.5 px-3 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(147,51,234,0.2)] hover:brightness-110 transition">
-                    <span class="text-[10px] font-extrabold text-amber-300 bg-amber-500/15 border border-amber-400/30 px-1.5 py-0.5 rounded">تحديث PRO</span>
-                    <span class="text-xs font-bold text-purple-100">اتصال آمن ... في كل مكان</span>
-                    <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
-                    </svg>
-                </button>
-
             </div>
 
             <div id="tab-security" class="hidden space-y-3 pt-2">
@@ -625,19 +617,48 @@
                     </div>
                 </div>
 
-                <div class="cyber-card rounded-2xl p-4 space-y-2.5">
-                    <h3 class="text-xs font-bold text-white">تفاصيل النفق النشط</h3>
-                    <div class="flex justify-between text-xs border-b border-purple-500/15 pb-2">
+                <div class="cyber-card rounded-2xl p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-extrabold text-white">تفاصيل النفق النشط</h3>
+                        <span id="ipChangeBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-900/50 border border-purple-500/30 text-purple-200">بانتظار الفحص</span>
+                    </div>
+
+                    <div class="flex justify-between items-center text-xs border-b border-purple-500/15 pb-2.5">
                         <span class="text-gray-400">البروتوكول المختار:</span>
                         <span id="statsProto" class="font-bold text-purple-400">VLESS</span>
                     </div>
-                    <div class="flex justify-between text-xs border-b border-purple-500/15 pb-2">
-                        <span class="text-gray-400">عنوان واجهة TUN:</span>
-                        <span id="statsIp" class="font-bold text-gray-200 font-mono">غير نشط</span>
+
+                    <div class="border-b border-purple-500/15 pb-2.5 space-y-1.5">
+                        <div class="text-xs font-bold text-gray-200">البلد (قبل وبعد التشغيل):</div>
+                        <div class="grid grid-cols-2 gap-2 text-[11px]">
+                            <div class="bg-[#090614] border border-purple-500/15 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+                                <span class="text-gray-400">قبل:</span>
+                                <span id="countryBefore" class="font-bold text-amber-300">غير معروف</span>
+                            </div>
+                            <div class="bg-[#090614] border border-purple-500/15 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+                                <span class="text-gray-400">بعد:</span>
+                                <span id="countryAfter" class="font-bold text-emerald-400">غير معروف</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex justify-between text-xs">
+
+                    <div class="border-b border-purple-500/15 pb-2.5 space-y-1.5">
+                        <div class="text-xs font-bold text-gray-200">عنوان IP (قبل وبعد التشغيل):</div>
+                        <div class="space-y-1.5 text-[11px]" dir="ltr">
+                            <div class="bg-[#090614] border border-purple-500/15 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+                                <span class="text-gray-400 font-sans">Before IP:</span>
+                                <span id="ipBefore" class="font-mono font-bold text-amber-300">غير معروف</span>
+                            </div>
+                            <div class="bg-[#090614] border border-purple-500/15 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+                                <span class="text-gray-400 font-sans">After IP:</span>
+                                <span id="ipAfter" class="font-mono font-bold text-emerald-400">غير معروف</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center text-xs pt-0.5">
                         <span class="text-gray-400">خادم DNS:</span>
-                        <span class="font-bold text-emerald-400">1.1.1.1</span>
+                        <input id="dnsInput" type="text" value="1.1.1.1" onchange="updateDnsServer(this.value)" class="w-32 bg-[#090614] border border-purple-500/25 rounded-lg px-2 py-1 text-left font-mono font-bold text-emerald-400 text-xs focus:outline-none focus:border-purple-400" dir="ltr">
                     </div>
                 </div>
             </div>
@@ -691,11 +712,8 @@
                 </div>
                 <div class="space-y-2 text-xs font-semibold">
                     <button onclick="toggleDrawer(false); pasteSampleServer()" class="w-full text-right p-3 rounded-xl bg-purple-900/25 border border-purple-500/20 text-purple-200 hover:bg-purple-900/40">⚡ تعبئة رابط إعداد تجريبي</button>
-                    <button onclick="toggleDrawer(false); document.getElementById('heroBgUpload').click()" class="w-full text-right p-3 rounded-xl hover:bg-white/5 text-purple-300">🖼️ تغيير خلفية الواجهة (صورة مخصصة)</button>
-                    <button id="resetHeroBgBtn" onclick="toggleDrawer(false); resetHeroBackground()" class="hidden w-full text-right p-3 rounded-xl hover:bg-white/5 text-gray-300">↺ استعادة الخلفية الافتراضية</button>
                     <button onclick="toggleDrawer(false); switchTab('stats')" class="w-full text-right p-3 rounded-xl hover:bg-white/5 text-gray-200">📊 الإحصائيات وحالة TUN</button>
                     <button onclick="toggleDrawer(false); switchTab('security')" class="w-full text-right p-3 rounded-xl hover:bg-white/5 text-gray-200">🛡️ درع الحماية</button>
-                    <button onclick="toggleDrawer(false); openModal('proModal')" class="w-full text-right p-3 rounded-xl hover:bg-white/5 text-amber-300">👑 ترقية الحساب إلى PRO</button>
                 </div>
             </div>
             <input type="file" id="heroBgUpload" accept="image/*" class="hidden" onchange="handleHeroBgUpload(event)">
@@ -818,12 +836,81 @@
             document.getElementById('logsContainer').innerHTML = '<div class="text-purple-400">[SYSTEM] Logs cleared.</div>';
         }
 
-        function applyUiState(newState, detailMsg, endpoint, latencyMs) {
+        let lastTxBytes = 0;
+        let lastRxBytes = 0;
+
+        function formatBytes(bytes) {
+            if (!bytes || bytes <= 0) return '0 B';
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+            return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+        }
+
+        function formatSpeed(bytesPerSec) {
+            if (!bytesPerSec || bytesPerSec <= 0) return '0 KB/s';
+            if (bytesPerSec < 1024 * 1024) return `${(bytesPerSec / 1024).toFixed(1)} KB/s`;
+            return `${(bytesPerSec / (1024 * 1024)).toFixed(2)} MB/s`;
+        }
+
+        function updateDnsServer(val) {
+            const clean = (val || '').trim() || '1.1.1.1';
+            document.getElementById('dnsInput').value = clean;
+            addLog('DNS', `DNS server set to ${clean}`, 'text-emerald-300');
+            showToast(`تم تعيين DNS إلى ${clean}`);
+        }
+
+        function applyGeoDetails(info) {
+            const bIp = info.beforeIp || 'غير معروف';
+            const bCountry = info.beforeCountry || 'غير معروف';
+            const aIp = info.afterIp || 'غير معروف';
+            const aCountry = info.afterCountry || 'غير معروف';
+            const changed = Boolean(info.ipChanged);
+
+            document.getElementById('countryBefore').textContent = bCountry;
+            document.getElementById('countryAfter').textContent = aCountry;
+            document.getElementById('ipBefore').textContent = bIp;
+            document.getElementById('ipAfter').textContent = aIp;
+
+            const badge = document.getElementById('ipChangeBadge');
+            if (info.state === 'connected') {
+                if (changed) {
+                    badge.textContent = 'تغيّر IP والبلد ✓';
+                    badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-900/50 border border-emerald-400/40 text-emerald-300';
+                } else {
+                    badge.textContent = 'نفس IP الحالي';
+                    badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-900/50 border border-amber-400/40 text-amber-300';
+                }
+            } else {
+                badge.textContent = 'بانتظار الفحص';
+                badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-900/50 border border-purple-500/30 text-purple-200';
+            }
+
+            if (info.dns) {
+                document.getElementById('dnsInput').value = info.dns;
+            }
+        }
+
+        function applyUiState(payloadOrState, detailMsg, endpoint, latencyMs) {
+            const info = (typeof payloadOrState === 'object' && payloadOrState !== null)
+                ? payloadOrState
+                : {
+                    state: payloadOrState,
+                    message: detailMsg || '',
+                    endpoint: endpoint || '',
+                    latencyMs: latencyMs !== undefined ? latencyMs : -1
+                };
+
+            const newState = info.state;
+            const msg = info.message || '';
+            const rtt = info.latencyMs !== undefined ? info.latencyMs : -1;
+
             const btn = document.getElementById('powerBtn');
             const label = document.getElementById('powerBtnLabel');
             const statusDot = document.getElementById('statusDot');
             const statusText = document.getElementById('statusText');
             const speedText = document.getElementById('currentSpeedText');
+
+            applyGeoDetails(info);
 
             if (newState === 'connecting') {
                 appState.status = 'connecting';
@@ -833,7 +920,7 @@
                 statusDot.className = 'w-2 h-2 rounded-full bg-yellow-400 animate-ping';
                 statusText.className = 'text-[11px] font-bold text-yellow-400';
                 statusText.textContent = 'جاري الفحص...';
-                addLog(appState.protocol, detailMsg || 'Parsing config & opening TUN...', 'text-yellow-400');
+                addLog(appState.protocol, msg || 'Checking IP before/after & connecting...', 'text-yellow-400');
             } else if (newState === 'connected') {
                 appState.status = 'connected';
                 btn.classList.remove('connecting');
@@ -844,11 +931,10 @@
                 statusText.textContent = 'متصل';
                 document.getElementById('signalBar4').classList.remove('bg-emerald-400/30');
                 document.getElementById('signalBar4').classList.add('bg-emerald-400');
-                document.getElementById('statsIp').textContent = endpoint || '10.66.0.2/32';
-                document.getElementById('pingValue').textContent = (latencyMs && latencyMs >= 0) ? `${latencyMs} ms` : 'UP';
-                speedText.textContent = (latencyMs && latencyMs >= 0) ? `${latencyMs} ms` : 'ACTIVE';
-                addLog('TUNNEL_UP', detailMsg || `Connected (${appState.protocol})`, 'text-emerald-400');
-                showToast(detailMsg || `متصل عبر ${appState.protocol}`);
+                document.getElementById('pingValue').textContent = (rtt >= 0) ? `${rtt} ms` : 'UP';
+                speedText.textContent = (rtt >= 0) ? `${rtt} ms` : 'ACTIVE';
+                addLog('TUNNEL_UP', msg || `Connected (${appState.protocol})`, 'text-emerald-400');
+                showToast(msg || `متصل عبر ${appState.protocol}`);
                 startSessionClock();
             } else {
                 appState.status = 'disconnected';
@@ -859,23 +945,31 @@
                 statusText.textContent = 'غير متصل';
                 document.getElementById('signalBar4').classList.add('bg-emerald-400/30');
                 speedText.textContent = '--';
-                document.getElementById('statsIp').textContent = 'غير نشط';
+                document.getElementById('uploadSpeed').textContent = '0 KB/s';
+                document.getElementById('downloadSpeed').textContent = '0 KB/s';
                 document.getElementById('pingValue').textContent = 'IDLE';
                 clearInterval(sessionInterval);
-                if (detailMsg) {
-                    addLog('TUNNEL', detailMsg, 'text-red-400');
-                    showToast(detailMsg);
+                if (msg) {
+                    addLog('TUNNEL', msg, 'text-red-400');
+                    showToast(msg);
                 }
             }
         }
 
-        window.onNativeVpnState = function(state, message, endpoint, latencyMs) {
-            applyUiState(state, message, endpoint, latencyMs);
+        window.onNativeVpnState = function(jsonOrState) {
+            if (typeof jsonOrState === 'string') {
+                try {
+                    applyUiState(JSON.parse(jsonOrState));
+                    return;
+                } catch (_) {}
+            }
+            applyUiState(jsonOrState);
         };
 
         function toggleConnection() {
             const server = document.getElementById('serverInput').value.trim();
             const routing = appState.routingModes[appState.routingIndex];
+            const dns = (document.getElementById('dnsInput')?.value || '1.1.1.1').trim() || '1.1.1.1';
 
             if (appState.status === 'disconnected') {
                 if (!server) {
@@ -883,23 +977,50 @@
                     addLog('INPUT', 'Empty server field.', 'text-red-400');
                     return;
                 }
-                applyUiState('connecting', `Checking ${appState.protocol} -> ${server}`);
+                applyUiState({
+                    state: 'connecting',
+                    message: `Checking ${appState.protocol} -> ${server}`,
+                    dns: dns
+                });
                 if (hasNativeBridge()) {
-                    window.ProxyXBridge.connectVpn(appState.protocol, server, routing);
+                    window.ProxyXBridge.connectVpn(appState.protocol, server, routing, dns);
                 } else {
-                    applyUiState('disconnected', 'الجسر الأصلي غير متاح خارج تطبيق أندرويد');
+                    applyUiState({ state: 'disconnected', message: 'الجسر الأصلي غير متاح خارج تطبيق أندرويد' });
                 }
             } else {
                 if (hasNativeBridge()) {
                     window.ProxyXBridge.disconnectVpn();
                 } else {
-                    applyUiState('disconnected', 'تم إيقاف الاتصال');
+                    applyUiState({ state: 'disconnected', message: 'تم إيقاف الاتصال' });
                 }
             }
         }
 
+        function refreshTrafficStats() {
+            if (!hasNativeBridge() || typeof window.ProxyXBridge.getTrafficJson !== 'function') return;
+            try {
+                const t = JSON.parse(window.ProxyXBridge.getTrafficJson());
+                const tx = Number(t.txBytes || 0);
+                const rx = Number(t.rxBytes || 0);
+                document.getElementById('totalUploaded').textContent = formatBytes(tx);
+                document.getElementById('totalDownloaded').textContent = formatBytes(rx);
+
+                const txDiff = Math.max(0, tx - lastTxBytes);
+                const rxDiff = Math.max(0, rx - lastRxBytes);
+                lastTxBytes = tx;
+                lastRxBytes = rx;
+
+                if (appState.status === 'connected') {
+                    document.getElementById('uploadSpeed').textContent = formatSpeed(txDiff);
+                    document.getElementById('downloadSpeed').textContent = formatSpeed(rxDiff);
+                }
+            } catch (_) {}
+        }
+
         function startSessionClock() {
             clearInterval(sessionInterval);
+            lastTxBytes = 0;
+            lastRxBytes = 0;
             sessionInterval = setInterval(() => {
                 if (appState.status !== 'connected') return;
                 appState.secondsConnected++;
@@ -907,6 +1028,7 @@
                 const mins = String(Math.floor((appState.secondsConnected % 3600) / 60)).padStart(2, '0');
                 const secs = String(appState.secondsConnected % 60).padStart(2, '0');
                 document.getElementById('sessionTimer').textContent = `${hrs}:${mins}:${secs}`;
+                refreshTrafficStats();
             }, 1000);
         }
 
