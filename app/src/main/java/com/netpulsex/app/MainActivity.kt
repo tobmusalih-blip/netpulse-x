@@ -11,6 +11,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import java.lang.ref.WeakReference
 
 class MainActivity : Activity() {
 
@@ -22,6 +23,7 @@ class MainActivity : Activity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        activeActivityRef = WeakReference(this)
 
         webView = WebView(this).apply {
             setBackgroundColor(Color.parseColor("#06040d"))
@@ -34,7 +36,17 @@ class MainActivity : Activity() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
                     val state = if (ProxyXVpnService.isRunning) "connected" else "disconnected"
-                    notifyJsStatus(state, "الجسر الأصلي جاهز")
+                    val msg = if (ProxyXVpnService.isRunning) {
+                        "النفق نشط عبر ${ProxyXVpnService.activeProtocol} (${ProxyXVpnService.activeEndpoint})"
+                    } else {
+                        "المحرك جاهز لإدخال السيرفر والاتصال"
+                    }
+                    notifyJsStatus(
+                        state,
+                        msg,
+                        ProxyXVpnService.activeEndpoint,
+                        ProxyXVpnService.lastLatencyMs
+                    )
                 }
             }
             webChromeClient = WebChromeClient()
@@ -46,6 +58,13 @@ class MainActivity : Activity() {
     }
 
     private fun requestOrStartVpn(protocol: String, server: String, routing: String) {
+        val parsed = ServerConfigParser.parse(protocol, server)
+        if (parsed.isFailure) {
+            val errMsg = parsed.exceptionOrNull()?.message ?: "رابط السيرفر غير صالح"
+            notifyJsStatus("disconnected", errMsg, "", -1L)
+            return
+        }
+
         pendingProtocol = protocol
         pendingServer = server
         pendingRouting = routing
@@ -67,7 +86,7 @@ class MainActivity : Activity() {
             if (resultCode == RESULT_OK) {
                 launchVpnService()
             } else {
-                notifyJsStatus("disconnected", "تم رفض إذن VPN من النظام")
+                notifyJsStatus("disconnected", "تم رفض إذن VPN من النظام", "", -1L)
             }
         }
     }
@@ -80,7 +99,6 @@ class MainActivity : Activity() {
             putExtra(ProxyXVpnService.EXTRA_ROUTING, pendingRouting)
         }
         startService(intent)
-        notifyJsStatus("connected", "تم تفعيل واجهة TUN الحقيقية عبر $pendingProtocol")
     }
 
     private fun stopVpnService() {
@@ -88,14 +106,17 @@ class MainActivity : Activity() {
             action = ProxyXVpnService.ACTION_STOP
         }
         startService(intent)
-        notifyJsStatus("disconnected", "تم إيقاف خدمة VPN")
+        notifyJsStatus("disconnected", "تم إيقاف خدمة VPN", "", -1L)
     }
 
-    private fun notifyJsStatus(state: String, message: String) {
+    fun notifyJsStatus(state: String, message: String, endpoint: String, latencyMs: Long) {
         val safeMsg = message.replace("\\", "\\\\").replace("'", "\\'")
-        val js = "if (window.onNativeVpnState) { window.onNativeVpnState('$state', '$safeMsg'); }"
+        val safeEp = endpoint.replace("\\", "\\\\").replace("'", "\\'")
+        val js = "if (window.onNativeVpnState) { window.onNativeVpnState('$state', '$safeMsg', '$safeEp', $latencyMs); }"
         runOnUiThread {
-            webView.evaluateJavascript(js, null)
+            if (this::webView.isInitialized) {
+                webView.evaluateJavascript(js, null)
+            }
         }
     }
 
@@ -139,5 +160,10 @@ class MainActivity : Activity() {
 
     companion object {
         private const val VPN_REQUEST_CODE = 1001
+        private var activeActivityRef: WeakReference<MainActivity>? = null
+
+        fun dispatchStatusToUi(state: String, message: String, endpoint: String, latencyMs: Long) {
+            activeActivityRef?.get()?.notifyJsStatus(state, message, endpoint, latencyMs)
+        }
     }
 }

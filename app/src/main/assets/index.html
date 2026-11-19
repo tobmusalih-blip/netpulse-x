@@ -818,7 +818,7 @@
             document.getElementById('logsContainer').innerHTML = '<div class="text-purple-400">[SYSTEM] Logs cleared.</div>';
         }
 
-        function applyUiState(newState, detailMsg) {
+        function applyUiState(newState, detailMsg, endpoint, latencyMs) {
             const btn = document.getElementById('powerBtn');
             const label = document.getElementById('powerBtnLabel');
             const statusDot = document.getElementById('statusDot');
@@ -832,8 +832,8 @@
                 label.textContent = 'جاري...';
                 statusDot.className = 'w-2 h-2 rounded-full bg-yellow-400 animate-ping';
                 statusText.className = 'text-[11px] font-bold text-yellow-400';
-                statusText.textContent = 'جاري التهيئة...';
-                addLog(appState.protocol, detailMsg || 'Requesting VPN permission & TUN interface...', 'text-yellow-400');
+                statusText.textContent = 'جاري الفحص...';
+                addLog(appState.protocol, detailMsg || 'Parsing config & opening TUN...', 'text-yellow-400');
             } else if (newState === 'connected') {
                 appState.status = 'connected';
                 btn.classList.remove('connecting');
@@ -844,11 +844,11 @@
                 statusText.textContent = 'متصل';
                 document.getElementById('signalBar4').classList.remove('bg-emerald-400/30');
                 document.getElementById('signalBar4').classList.add('bg-emerald-400');
-                document.getElementById('statsIp').textContent = '10.66.0.2/32';
-                document.getElementById('pingValue').textContent = 'TUN UP';
-                speedText.textContent = 'TUN ACTIVE';
-                addLog('VPN_SERVICE', detailMsg || `TUN established (${appState.protocol})`, 'text-emerald-400');
-                showToast(detailMsg || `تم تفعيل اتصال ${appState.protocol}`);
+                document.getElementById('statsIp').textContent = endpoint || '10.66.0.2/32';
+                document.getElementById('pingValue').textContent = (latencyMs && latencyMs >= 0) ? `${latencyMs} ms` : 'UP';
+                speedText.textContent = (latencyMs && latencyMs >= 0) ? `${latencyMs} ms` : 'ACTIVE';
+                addLog('TUNNEL_UP', detailMsg || `Connected (${appState.protocol})`, 'text-emerald-400');
+                showToast(detailMsg || `متصل عبر ${appState.protocol}`);
                 startSessionClock();
             } else {
                 appState.status = 'disconnected';
@@ -858,19 +858,19 @@
                 statusText.className = 'text-[11px] font-bold text-red-400';
                 statusText.textContent = 'غير متصل';
                 document.getElementById('signalBar4').classList.add('bg-emerald-400/30');
-                speedText.textContent = '-- MB/s';
-                document.getElementById('uploadSpeed').textContent = '0 KB/s';
-                document.getElementById('downloadSpeed').textContent = '0 KB/s';
+                speedText.textContent = '--';
                 document.getElementById('statsIp').textContent = 'غير نشط';
                 document.getElementById('pingValue').textContent = 'IDLE';
                 clearInterval(sessionInterval);
-                addLog('VPN_SERVICE', detailMsg || 'VPN tunnel stopped.', 'text-red-400');
-                if (detailMsg) showToast(detailMsg);
+                if (detailMsg) {
+                    addLog('TUNNEL', detailMsg, 'text-red-400');
+                    showToast(detailMsg);
+                }
             }
         }
 
-        window.onNativeVpnState = function(state, message) {
-            applyUiState(state, message);
+        window.onNativeVpnState = function(state, message, endpoint, latencyMs) {
+            applyUiState(state, message, endpoint, latencyMs);
         };
 
         function toggleConnection() {
@@ -878,11 +878,16 @@
             const routing = appState.routingModes[appState.routingIndex];
 
             if (appState.status === 'disconnected') {
-                applyUiState('connecting', `Protocol=${appState.protocol} | Routing=${routing}`);
+                if (!server) {
+                    showToast('أدخل رابط السيرفر أو العنوان (IP:PORT) أولاً');
+                    addLog('INPUT', 'Empty server field.', 'text-red-400');
+                    return;
+                }
+                applyUiState('connecting', `Checking ${appState.protocol} -> ${server}`);
                 if (hasNativeBridge()) {
                     window.ProxyXBridge.connectVpn(appState.protocol, server, routing);
                 } else {
-                    setTimeout(() => applyUiState('connected', 'وضع المعاينة في المتصفح (بدون VpnService)'), 700);
+                    applyUiState('disconnected', 'الجسر الأصلي غير متاح خارج تطبيق أندرويد');
                 }
             } else {
                 if (hasNativeBridge()) {
