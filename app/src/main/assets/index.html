@@ -3,36 +3,44 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NetPulse X</title>
+  <title>NetPulse X — محاكاة الشبكة</title>
   <style>
-    body {
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      background: #0b1020;
-      color: #f8fafc;
-      display: flex;
-      min-height: 100vh;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 20px;
-    }
-    .card {
-      background: #131b33;
-      border: 1px solid #26335c;
-      border-radius: 16px;
-      padding: 28px;
-      max-width: 420px;
-      width: 100%;
-    }
-    h1 { margin: 0 0 10px; font-size: 24px; color: #38bdf8; }
-    p { margin: 0; color: #cbd5e1; line-height: 1.6; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: #070b16; color: #f8fafc; padding: 20px; }
+    .box { max-width: 640px; margin: 0 auto; background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; padding: 20px; }
+    h1 { margin: 0 0 8px; font-size: 22px; color: #38bdf8; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0; }
+    .stat { background: #1e293b; border-radius: 12px; padding: 12px; text-align: center; }
+    .val { font-size: 20px; font-weight: bold; color: #22d3ee; }
+    .lbl { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+    button { width: 100%; padding: 12px; border: 0; border-radius: 10px; background: #0284c7; color: #fff; font-size: 15px; font-weight: bold; cursor: pointer; }
+    .log { margin-top: 14px; background: #020617; border: 1px solid #1e293b; border-radius: 10px; padding: 12px; font-family: monospace; font-size: 12px; color: #a5f3fc; max-height: 180px; overflow-y: auto; text-align: left; direction: ltr; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>NetPulse X</h1>
-    <p>تم بناء تطبيق NetPulse X بنجاح. يمكنك استبدال هذا الملف بواجهة التطبيق الكاملة داخل app/src/main/assets/index.html.</p>
+  <div class="box">
+    <h1>NetPulse X — محاكاة الشبكة</h1>
+    <p style="margin:0;color:#94a3b8;font-size:14px;">لوحة محاكاة فورية لقياس الاستجابة، السرعة، وتتبع الحزم.</p>
+    <div class="grid">
+      <div class="stat"><div class="val" id="ping">-- ms</div><div class="lbl">Ping / Latency</div></div>
+      <div class="stat"><div class="val" id="dl">-- Mbps</div><div class="lbl">Download Sim</div></div>
+      <div class="stat"><div class="val" id="loss">0.0%</div><div class="lbl">Packet Loss</div></div>
+    </div>
+    <button onclick="runSim()">تشغيل المحاكاة</button>
+    <div class="log" id="log">[READY] NetPulse X simulation engine initialized.</div>
   </div>
+  <script>
+    function runSim() {
+      const ping = (Math.random() * 45 + 12).toFixed(1);
+      const dl = (Math.random() * 180 + 25).toFixed(1);
+      const loss = (Math.random() * 1.5).toFixed(1);
+      document.getElementById('ping').textContent = ping + ' ms';
+      document.getElementById('dl').textContent = dl + ' Mbps';
+      document.getElementById('loss').textContent = loss + '%';
+      const log = document.getElementById('log');
+      const time = new Date().toLocaleTimeString();
+      log.innerHTML += `\n[${time}] Probe -> ping=${ping}ms | dl=${dl}Mbps | loss=${loss}%`;
+      log.scrollTop = log.scrollHeight;
+    }
+  </script>
 </body>
 </html>
