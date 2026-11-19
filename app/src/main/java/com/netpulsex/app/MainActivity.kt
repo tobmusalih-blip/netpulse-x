@@ -11,7 +11,6 @@ import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.activity.result.contract.ActivityResultContracts
 
 class MainActivity : Activity() {
 
@@ -19,16 +18,6 @@ class MainActivity : Activity() {
     private var pendingProtocol: String = "VLESS"
     private var pendingServer: String = ""
     private var pendingRouting: String = "افتراضي"
-
-    private val vpnPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == RESULT_OK) {
-            launchVpnService()
-        } else {
-            notifyJsStatus("disconnected", "تم رفض إذن VPN من النظام")
-        }
-    }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,9 +52,23 @@ class MainActivity : Activity() {
 
         val prepareIntent = VpnService.prepare(this)
         if (prepareIntent != null) {
-            vpnPermissionLauncher.launch(prepareIntent)
+            @Suppress("DEPRECATION")
+            startActivityForResult(prepareIntent, VPN_REQUEST_CODE)
         } else {
             launchVpnService()
+        }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == VPN_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                launchVpnService()
+            } else {
+                notifyJsStatus("disconnected", "تم رفض إذن VPN من النظام")
+            }
         }
     }
 
@@ -89,7 +92,7 @@ class MainActivity : Activity() {
     }
 
     private fun notifyJsStatus(state: String, message: String) {
-        val safeMsg = message.replace("'", "\\'")
+        val safeMsg = message.replace("\\", "\\\\").replace("'", "\\'")
         val js = "if (window.onNativeVpnState) { window.onNativeVpnState('$state', '$safeMsg'); }"
         runOnUiThread {
             webView.evaluateJavascript(js, null)
@@ -132,5 +135,9 @@ class MainActivity : Activity() {
             webView.destroy()
         }
         super.onDestroy()
+    }
+
+    companion object {
+        private const val VPN_REQUEST_CODE = 1001
     }
 }
