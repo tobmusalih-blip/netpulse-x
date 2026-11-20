@@ -1748,5 +1748,104 @@
 })();
 </script>
 
+
+<script>
+(function() {
+    const PROTO_NAMES = ['VLESS', 'VMess', 'Trojan', 'Shadowsocks', 'SOCKS5', 'WireGuard', 'IP Proxy'];
+
+    function findProtocolButtons() {
+        const ipBtn = document.querySelector('[data-proto="IP_PROXY"]');
+        const row = (ipBtn && ipBtn.parentElement) || document.getElementById('protocolsRow');
+        if (!row) return [];
+        return Array.from(row.children).filter(el => {
+            if (el.tagName !== 'BUTTON' && el.tagName !== 'DIV') return false;
+            const txt = (el.textContent || '').trim();
+            return PROTO_NAMES.some(name => txt.includes(name));
+        });
+    }
+
+    function detectProtoCode(btn) {
+        const attr = btn.getAttribute('data-proto');
+        if (attr) return attr;
+        const txt = (btn.textContent || '').trim();
+        for (const name of PROTO_NAMES) {
+            if (txt.includes(name)) {
+                return name === 'IP Proxy' ? 'IP_PROXY' : name.toUpperCase();
+            }
+        }
+        return 'VLESS';
+    }
+
+    function detectProtoLabel(btn) {
+        const txt = (btn.textContent || '').trim();
+        for (const name of PROTO_NAMES) {
+            if (txt.includes(name)) return name;
+        }
+        return txt || 'VLESS';
+    }
+
+    function applyExclusiveSelection(activeBtn) {
+        const buttons = findProtocolButtons();
+        if (!buttons.length || !activeBtn) return;
+
+        buttons.forEach(btn => {
+            const isTarget = (btn === activeBtn);
+            btn.classList.remove('active', 'selected', 'ring-2', 'ring-purple-400', 'border-purple-400', 'bg-purple-900/50', 'bg-purple-950/70', 'shadow-lg');
+            btn.removeAttribute('data-active');
+            btn.querySelectorAll('.ip-proxy-check, .proto-active-badge').forEach(b => b.remove());
+
+            if (isTarget) {
+                btn.classList.add('active', 'selected', 'border-purple-400', 'bg-purple-900/50', 'text-white');
+                btn.setAttribute('data-active', 'true');
+                if (getComputedStyle(btn).position === 'static') {
+                    btn.style.position = 'relative';
+                }
+                const badge = document.createElement('span');
+                badge.className = 'proto-active-badge absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-purple-500 text-white flex items-center justify-center text-[10px] font-extrabold shadow pointer-events-none';
+                badge.textContent = '✓';
+                btn.appendChild(badge);
+            }
+        });
+
+        const code = detectProtoCode(activeBtn);
+        const label = detectProtoLabel(activeBtn);
+
+        if (window.appState) {
+            window.appState.protocol = code;
+        }
+        const statsProto = document.getElementById('statsProto');
+        if (statsProto) statsProto.textContent = label;
+
+        const inp = document.getElementById('serverInput');
+        if (inp) {
+            if (code === 'IP_PROXY') {
+                inp.placeholder = 'أدخل عنوان IP والمنفذ مثل 197.232.158.189:41890...';
+            } else if (inp.placeholder && inp.placeholder.includes('197.232.158.189:41890')) {
+                inp.placeholder = 'أدخل رابط السيرفر هنا...';
+            }
+        }
+    }
+
+    document.addEventListener('click', function(e) {
+        const buttons = findProtocolButtons();
+        if (!buttons.length) return;
+        const clickedBtn = buttons.find(btn => btn === e.target || btn.contains(e.target));
+        if (!clickedBtn) return;
+
+        applyExclusiveSelection(clickedBtn);
+        setTimeout(() => applyExclusiveSelection(clickedBtn), 25);
+        setTimeout(() => applyExclusiveSelection(clickedBtn), 100);
+    }, true);
+
+    window.selectIpProxyProtocol = function(btnEl) {
+        const target = btnEl || document.querySelector('[data-proto="IP_PROXY"]');
+        if (target) applyExclusiveSelection(target);
+        if (typeof window.showToast === 'function') {
+            window.showToast('تم تحديد بروتوكول IP Proxy');
+        }
+    };
+})();
+</script>
+
 </body>
 </html>
