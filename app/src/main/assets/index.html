@@ -434,47 +434,24 @@
                     </div>
                 </div>
 
-                <div class="cyber-card rounded-2xl p-2.5">
-                    <div class="flex items-center justify-between">
-                        <button onclick="cycleRoutingMode()" class="flex items-center gap-2 text-right">
-                            <div class="w-8 h-8 rounded-full bg-indigo-950 border border-sky-400/35 flex items-center justify-center text-sky-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="9"/>
-                                    <path d="M3.6 9h16.8M3.6 15h16.8M11.5 3a17 17 0 000 18M12.5 3a17 17 0 010 18"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="text-xs font-bold text-white">توجيه الاتصال</div>
-                                <div class="text-[10px] text-purple-300 flex items-center gap-1">
-                                    <span id="routingModeText">افتراضي</span>
-                                    <span>›</span>
-                                </div>
-                            </div>
-                        </button>
-
-                        <button onclick="toggleAdvancedOptions()" class="flex items-center gap-1.5 text-xs font-semibold text-gray-200 hover:text-purple-300 transition pl-1">
-                            <span>الخيارات المتقدمة</span>
-                            <svg id="advChevron" class="w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div id="advancedPanel" class="hidden mt-2.5 pt-2.5 border-t border-purple-500/15 space-y-2 text-xs">
-                        <div class="flex items-center justify-between">
-                            <span class="text-gray-300">خادم DNS المخصص (1.1.1.1)</span><div id="dnsToggle" class="toggle-switch on" onclick="togglePersistentOption('dnsToggle', 'netpulse_dns_custom', 'DNS (1.1.1.1)')"><div class="toggle-knob"></div></div><span class="hidden"></span>
-                            <div class="toggle-switch on" onclick="this.classList.toggle('on'); showToast('تم تحديث إعداد DNS')"><div class="toggle-knob"></div></div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-gray-300">حجم الحزمة (MTU: 1420)</span>
-                            <span class="text-[10px] bg-purple-900/50 border border-purple-500/30 px-2 py-0.5 rounded text-purple-200 font-mono">1420</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-gray-300">تفعيل TLS 1.3 & Mux</span><div id="tlsMuxToggle" class="toggle-switch on" onclick="togglePersistentOption('tlsMuxToggle', 'netpulse_tls_mux', 'TLS 1.3 & Mux')"><div class="toggle-knob"></div></div><span class="hidden"></span>
-                            <div class="toggle-switch on" onclick="this.classList.toggle('on'); showToast('تم تحديث TLS & Mux')"><div class="toggle-knob"></div></div>
-                        </div>
-                    </div>
-                </div>
+                <div id="localServersSection" class="bg-[#080611] border border-purple-500/15 rounded-2xl p-3 space-y-2.5 mt-3">
+    <div class="flex items-center justify-between border-b border-white/5 pb-2">
+        <div class="flex items-center gap-2">
+            <span id="localServersCount" class="text-sm font-bold text-white">Local (0)</span>
+            <span id="speedScanStatus" class="text-[11px] text-gray-400"></span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="saveCurrentServerToLocal()" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-purple-900/40 border border-purple-500/30 text-purple-200 hover:bg-purple-800/50 transition">+ حفظ</button>
+            <button type="button" id="speedTestBtn" onclick="runServersSpeedTest()" title="فحص سرعة السيرفرات" class="w-8 h-8 rounded-full bg-[#121624] border border-cyan-400/50 flex items-center justify-center text-cyan-300 hover:bg-cyan-500/20 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 13l4-4m-4 4a2 2 0 11-2 2m9-3a7 7 0 10-14 0"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <div id="localServersList" class="space-y-2 max-h-72 overflow-y-auto"></div>
+</div>
+<!-- /localServersSection -->
 
                 <div class="cyber-card rounded-2xl p-2.5 flex items-center justify-between gap-2.5 overflow-hidden">
                     <div class="flex items-center gap-3 pr-1 flex-shrink-0">
