@@ -453,23 +453,7 @@
 </div>
 <!-- /localServersSection -->
 
-<div id="customIpServersSection" class="bg-[#080611] border border-cyan-500/20 rounded-2xl p-3 space-y-2.5 mt-3">
-    <div class="flex items-center justify-between border-b border-white/5 pb-2">
-        <div class="flex items-center gap-2">
-            <span id="customIpCount" class="text-sm font-bold text-cyan-300">IP الخاصة (0)</span>
-            <span class="text-[10px] text-gray-400">منفصلة عن Local</span>
-        </div>
-        <div class="flex items-center gap-1.5">
-            <button type="button" onclick="pasteIntoCustomIpBatch(true)" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-cyan-950/70 border border-cyan-400/35 text-cyan-200 hover:bg-cyan-900/60 transition">لصق IP</button>
-            <button type="button" onclick="clearCustomIpList()" class="text-[11px] font-bold px-2 py-1 rounded-lg bg-rose-950/50 border border-rose-400/25 text-rose-200 hover:bg-rose-900/50 transition">مسح</button>
-        </div>
-    </div>
-    <div id="customIpList" class="space-y-2 max-h-60 overflow-y-auto"></div>
-</div>
-<!-- /customIpServersSection -->
-
-
-                <div class="cyber-card rounded-2xl p-2.5 flex items-center justify-between gap-2.5 overflow-hidden">
+<div class="cyber-card rounded-2xl p-2.5 flex items-center justify-between gap-2.5 overflow-hidden">
                     <div class="flex items-center gap-3 pr-1 flex-shrink-0">
                         <div class="text-center">
                             <div class="flex items-center justify-center gap-1 text-[11px] text-gray-200 font-semibold">
@@ -1537,250 +1521,52 @@
 </script>
 
 
-<div id="customIpModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="w-full max-w-md bg-[#110c24] border border-cyan-500/30 rounded-2xl p-4 space-y-3 text-right shadow-2xl">
-        <div class="flex items-center justify-between border-b border-cyan-500/20 pb-2">
-            <h3 class="text-sm font-extrabold text-white">سيرفرات IP الخاصة (مستقلة)</h3>
-            <button type="button" onclick="closeCustomIpServersModal()" class="text-xs px-2.5 py-1 rounded-lg bg-white/10 text-gray-200 hover:bg-white/20">إغلاق</button>
-        </div>
-        <p class="text-[11px] text-gray-300 leading-relaxed">
-            الصق سطوراً أو قوائم تحتوي على <span class="font-mono text-cyan-300" dir="ltr">IP:PORT</span> (مثل مخرجات البوت) ليتم حفظها وتشغيلها في قسم <span class="text-cyan-300 font-bold">IP الخاصة</span> دون إضافتها إلى السيرفرات الأخرى.
-        </p>
-        <textarea id="customIpBatchInput" rows="5" placeholder="مثال:&#10;216.152.149.246:80 | US | 64ms&#10;113.204.79.230:9091 | CN | 25ms" class="w-full bg-[#080512] border border-cyan-500/25 rounded-xl p-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-400" dir="ltr"></textarea>
-        <div class="flex items-center gap-2">
-            <button type="button" onclick="pasteIntoCustomIpBatch(false)" class="flex-1 py-2 rounded-xl bg-purple-900/50 border border-purple-500/30 text-xs font-bold text-purple-100 hover:bg-purple-800/60 transition">لصق من الحافظة</button>
-            <button type="button" onclick="applyAndRunCustomIpBatch()" class="flex-1 py-2 rounded-xl bg-cyan-600/80 border border-cyan-400/40 text-xs font-bold text-white hover:bg-cyan-500 transition">حفظ وتشغيل أول IP</button>
-        </div>
-    </div>
-</div>
+
+
 
 
 <script>
 (function() {
-    const IP_STORAGE_KEY = 'netpulse_custom_private_ips_v1';
-    const IP_SELECTED_KEY = 'netpulse_selected_private_ip_v1';
-
-    function loadCustomIps() {
-        try {
-            const raw = localStorage.getItem(IP_STORAGE_KEY);
-            const arr = raw ? JSON.parse(raw) : [];
-            return Array.isArray(arr) ? arr : [];
-        } catch (_) {
-            return [];
-        }
+    function isDirectIpPort(val) {
+        return /^(?:\d{1,3}\.){3}\d{1,3}:\d{2,5}(?:[#?].*)?$/.test((val || '').trim());
     }
 
-    function saveCustomIps(arr) {
-        try { localStorage.setItem(IP_STORAGE_KEY, JSON.stringify(arr)); } catch (_) {}
-    }
-
-    function getSelectedIpId() {
-        try { return localStorage.getItem(IP_SELECTED_KEY) || ''; } catch (_) { return ''; }
-    }
-
-    function setSelectedIpId(id) {
-        try { localStorage.setItem(IP_SELECTED_KEY, id || ''); } catch (_) {}
-    }
-
-    function extractIpEntries(rawText) {
-        const text = (rawText || '').trim();
-        if (!text) return [];
-        const entries = [];
-        const seen = new Set();
-
-        text.split(/?
-/).forEach(line => {
-            const m = line.match(/\b((?:\d{1,3}\.){3}\d{1,3}:\d{2,5})\b/);
-            if (m) {
-                const hostPort = m[1];
-                const meta = line.replace(m[0], '').replace(/\|/g, ' ').replace(/\s+/g, ' ').trim();
-                const endpointUri = meta ? `${hostPort}#${encodeURIComponent(meta)}` : hostPort;
-                if (!seen.has(hostPort)) {
-                    seen.add(hostPort);
-                    entries.push({
-                        hostPort,
-                        meta: meta || 'IP خاص',
-                        uri: endpointUri
-                    });
-                }
-            }
-        });
-        return entries;
-    }
-
-    async function readClip() {
-        let txt = '';
-        try {
-            if (window.ProxyXBridge && typeof window.ProxyXBridge.pasteFromClipboard === 'function') {
-                txt = window.ProxyXBridge.pasteFromClipboard() || '';
-            }
-        } catch (_) {}
-        if (!txt && navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
-            try { txt = await navigator.clipboard.readText(); } catch (_) {}
-        }
-        return (txt || '').trim();
-    }
-
-    function addEntriesToCustomIp(entries) {
-        if (!entries.length) return 0;
-        const list = loadCustomIps();
-        let added = 0;
-        entries.forEach(item => {
-            const existing = list.find(x => x.hostPort === item.hostPort);
-            if (!existing) {
-                const id = 'priv_ip_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-                list.unshift({
-                    id,
-                    hostPort: item.hostPort,
-                    meta: item.meta,
-                    uri: item.uri
-                });
-                if (!getSelectedIpId()) setSelectedIpId(id);
-                added++;
-            }
-        });
-        saveCustomIps(list);
-        renderCustomIps();
-        return added;
-    }
-
-    window.runCustomIpItem = function(id) {
-        const list = loadCustomIps();
-        const item = list.find(x => x.id === id);
-        if (!item) return;
-        setSelectedIpId(item.id);
-        renderCustomIps();
-
+    function normalizeDirectIpInput() {
         const inp = document.getElementById('serverInput');
-        if (inp) {
-            inp.value = item.uri;
-            inp.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-        if (window.appState) {
-            window.appState.protocol = 'SOCKS5';
-        }
-        const protoEl = document.getElementById('statsProto');
-        if (protoEl) protoEl.textContent = 'IP خاص';
-
-        if (typeof window.showToast === 'function') {
-            window.showToast(`جاري تشغيل IP الخاص: ${item.hostPort}`);
-        }
-        if (typeof window.toggleConnection === 'function') {
-            if (window.appState && window.appState.status === 'connected') {
-                window.toggleConnection();
-                setTimeout(() => window.toggleConnection(), 300);
-            } else {
-                window.toggleConnection();
+        if (!inp) return;
+        const raw = (inp.value || '').trim();
+        const match = raw.match(/\b((?:\d{1,3}\.){3}\d{1,3}:\d{2,5})\b/);
+        if (match && isDirectIpPort(match[1])) {
+            if (window.appState && !window.appState.protocol) {
+                window.appState.protocol = 'SOCKS5';
+            }
+            const protoEl = document.getElementById('statsProto');
+            if (protoEl && protoEl.textContent.trim() === '') {
+                protoEl.textContent = 'SOCKS5';
             }
         }
-    };
-
-    window.deleteCustomIpItem = function(id, ev) {
-        if (ev) ev.stopPropagation();
-        const filtered = loadCustomIps().filter(x => x.id !== id);
-        saveCustomIps(filtered);
-        if (getSelectedIpId() === id) {
-            setSelectedIpId(filtered[0] ? filtered[0].id : '');
-        }
-        renderCustomIps();
-        if (typeof window.showToast === 'function') window.showToast('تم حذف IP الخاص');
-    };
-
-    window.clearCustomIpList = function() {
-        saveCustomIps([]);
-        setSelectedIpId('');
-        renderCustomIps();
-        if (typeof window.showToast === 'function') window.showToast('تم مسح قائمة IP الخاصة');
-    };
-
-    window.openCustomIpServersModal = async function() {
-        const modal = document.getElementById('customIpModal');
-        const ta = document.getElementById('customIpBatchInput');
-        if (ta && !ta.value.trim()) {
-            const clip = await readClip();
-            if (clip) ta.value = clip;
-        }
-        if (modal) modal.classList.remove('hidden');
-    };
-
-    window.closeCustomIpServersModal = function() {
-        const modal = document.getElementById('customIpModal');
-        if (modal) modal.classList.add('hidden');
-    };
-
-    window.pasteIntoCustomIpBatch = async function(saveDirectly) {
-        const clip = await readClip();
-        if (!clip) {
-            if (typeof window.showToast === 'function') window.showToast('الحافظة فارغة، انسخ عناوين IP أولاً');
-            return;
-        }
-        const ta = document.getElementById('customIpBatchInput');
-        if (ta) ta.value = clip;
-        if (saveDirectly) {
-            const entries = extractIpEntries(clip);
-            if (!entries.length) {
-                if (typeof window.showToast === 'function') window.showToast('لم يتم العثور على صيغة IP:PORT في الحافظة');
-                return;
-            }
-            const added = addEntriesToCustomIp(entries);
-            if (typeof window.showToast === 'function') {
-                window.showToast(`تم حفظ ${entries.length} من عناوين IP الخاصة (${added} جديد)`);
-            }
-        } else if (typeof window.showToast === 'function') {
-            window.showToast('تم لصق النص في نافذة IP الخاصة');
-        }
-    };
-
-    window.applyAndRunCustomIpBatch = function() {
-        const ta = document.getElementById('customIpBatchInput');
-        const raw = ta ? ta.value : '';
-        const entries = extractIpEntries(raw);
-        if (!entries.length) {
-            if (typeof window.showToast === 'function') window.showToast('أدخل أو الصق IP:PORT واحداً على الأقل');
-            return;
-        }
-        addEntriesToCustomIp(entries);
-        const list = loadCustomIps();
-        const first = list.find(x => x.hostPort === entries[0].hostPort) || list[0];
-        window.closeCustomIpServersModal();
-        if (first) {
-            window.runCustomIpItem(first.id);
-        }
-    };
-
-    function renderCustomIps() {
-        const list = loadCustomIps();
-        const selectedId = getSelectedIpId();
-        const countEl = document.getElementById('customIpCount');
-        const container = document.getElementById('customIpList');
-        if (countEl) countEl.textContent = `IP الخاصة (${list.length})`;
-        if (!container) return;
-
-        if (!list.length) {
-            container.innerHTML = '<div class="text-xs text-gray-400 text-center py-3 bg-[#0d1019] rounded-xl border border-white/5">لا توجد سيرفرات IP خاصة بعد. اضغط على الزر الدائري أو «لصق IP».</div>';
-            return;
-        }
-
-        container.innerHTML = list.map(item => {
-            const active = item.id === selectedId;
-            return `
-            <div onclick="runCustomIpItem('${item.id}')" class="cursor-pointer rounded-xl px-3 py-2 flex items-center justify-between gap-2 transition ${active ? 'bg-cyan-950/60 border border-cyan-400/50' : 'bg-[#141824] border border-white/5 hover:border-cyan-500/30'}">
-                <div class="min-w-0">
-                    <div class="text-xs font-extrabold font-mono text-white truncate" dir="ltr">${item.hostPort}</div>
-                    <div class="text-[10px] text-cyan-200/80 truncate mt-0.5">${item.meta}</div>
-                </div>
-                <div class="flex items-center gap-1.5 shrink-0">
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-200 border border-cyan-400/30">تشغيل</span>
-                    <button type="button" onclick="deleteCustomIpItem('${item.id}', event)" title="حذف" class="p-1 rounded-lg hover:bg-rose-500/20 text-rose-300 transition">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16"/></svg>
-                    </button>
-                </div>
-            </div>`;
-        }).join('');
     }
 
-    document.addEventListener('DOMContentLoaded', renderCustomIps);
-    window.addEventListener('load', renderCustomIps);
+    function bindDirectIpField() {
+        const inp = document.getElementById('serverInput');
+        if (inp && !inp.dataset.directIpBound) {
+            inp.dataset.directIpBound = '1';
+            inp.addEventListener('input', normalizeDirectIpInput);
+            inp.addEventListener('change', normalizeDirectIpInput);
+            inp.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    normalizeDirectIpInput();
+                    if (typeof window.toggleConnection === 'function' && (!window.appState || window.appState.status === 'disconnected')) {
+                        window.toggleConnection();
+                    }
+                }
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', bindDirectIpField);
+    window.addEventListener('load', bindDirectIpField);
+    setTimeout(bindDirectIpField, 250);
 })();
 </script>
 
