@@ -2,6 +2,9 @@ package com.netpulsex.app
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.VpnService
@@ -52,6 +55,20 @@ class MainActivity : Activity() {
         }
 
         setContentView(webView)
+    }
+
+    private fun readClipboardText(): String {
+        return try {
+            val cm = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+            val clip: ClipData? = cm?.primaryClip
+            if (clip != null && clip.itemCount > 0) {
+                clip.getItemAt(0)?.coerceToText(this)?.toString()?.trim().orEmpty()
+            } else {
+                ""
+            }
+        } catch (_: Exception) {
+            ""
+        }
     }
 
     private fun requestOrStartVpn(protocol: String, server: String, routing: String, dns: String) {
@@ -148,6 +165,11 @@ class MainActivity : Activity() {
         @JavascriptInterface
         fun getStatus(): String {
             return if (ProxyXVpnService.isRunning) "connected" else "disconnected"
+        }
+
+        @JavascriptInterface
+        fun pasteFromClipboard(): String {
+            return readClipboardText()
         }
     }
 

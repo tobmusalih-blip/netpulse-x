@@ -4,7 +4,10 @@ import android.content.Intent
 import android.net.VpnService
 import android.os.ParcelFileDescriptor
 import java.io.IOException
+import java.net.InetSocketAddress
+import java.net.Socket
 import java.util.concurrent.Executors
+import javax.net.ssl.SSLSocketFactory
 
 class ProxyXVpnService : VpnService() {
 
@@ -49,6 +52,11 @@ class ProxyXVpnService : VpnService() {
                     .addDnsServer(validDns)
                     .setMtu(1420)
 
+                try {
+                    builder.addDisallowedApplication(packageName)
+                } catch (_: Exception) {
+                }
+
                 vpnInterface = builder.establish()
             } catch (e: Exception) {
                 isRunning = false
@@ -59,27 +67,85 @@ class ProxyXVpnService : VpnService() {
         }
 
         executor.execute {
-            val probe = ProxyTunnelEngine.establishConnection(applicationContext, config)
-            if (probe.ok) {
-                isRunning = true
-                lastError = ""
-                activeProtocol = config.protocol
-                activeServer = config.rawInput
-                activeRouting = routing
-                activeDns = validDns
-                activeEndpoint = "${config.host}:${config.port}"
-                lastLatencyMs = probe.latencyMs
-                beforeIp = probe.beforeIp
-                beforeCountry = probe.beforeCountry
-                afterIp = probe.afterIp
-                afterCountry = probe.afterCountry
-                ipChanged = probe.ipChanged
-                MainActivity.dispatchStatusToUi("connected", probe.detail)
-            } else {
+            val beforeGeo = ProxyTunnelEngine.fetchCurrentGeoIp()
+            val start = System.currentTimeMillis()
+            val reachResult = probeProtectedEndpoint(config)
+            val rtt = System.currentTimeMillis() - start
+
+            if (!reachResult.first) {
                 stopTunnel()
-                lastError = probe.detail
-                MainActivity.dispatchStatusToUi("disconnected", probe.detail)
+                lastError = reachResult.second
+                MainActivity.dispatchStatusToUi("disconnected", lastError)
+                return@execute
             }
+
+            val afterGeo = ProxyTunnelEngine.fetchCurrentGeoIp()
+            val ipChanged = beforeGeo.ip != "غير معروف" &&
+                beforeGeo.ip != "تعذر الجلب" &&
+                afterGeo.ip != "غير معروف" &&
+                afterGeo.ip != "تعذر الجلب" &&
+                beforeGeo.ip != afterGeo.ip
+
+            val detail = if (config.protocol == "VLESS" || config.protocol == "VMESS" || config.protocol == "TROJAN" || config.protocol == "SHADOWSOCKS" || config.protocol == "WIREGUARD") {
+                "المنفذ مفتوح (${config.host}:${config.port}) • $rtt ms (يتطلب نواة sing-box/xray لتشغيل بروتوكول ${config.protocol} فعلياً)"
+            } else {
+                reachResult.second
+            }
+
+            isRunning = true
+            lastError = ""
+            activeProtocol = config.protocol
+            activeServer = config.rawInput
+            activeRouting = routing
+            activeDns = validDns
+            activeEndpoint = "${config.host}:${config.port}"
+            lastLatencyMs = rtt
+            beforeIp = beforeGeo.ip
+            beforeCountry = beforeGeo.country
+            afterIp = afterGeo.ip
+            afterCountry = afterGeo.country
+            ipChanged = ipChanged
+            MainActivity.dispatchStatusToUi("connected", detail)
+        }
+    }
+
+    private fun probeProtectedEndpoint(config: ParsedServerConfig): Pair<Boolean, String> {
+        return try {
+            if (config.protocol == "SOCKS5") {
+                Socket().use { socket ->
+                    protect(socket)
+                    socket.soTimeout = 5000
+                    socket.connect(InetSocketAddress(config.host, config.port), 5000)
+                    val out = socket.getOutputStream()
+                    val inp = socket.getInputStream()
+                    out.write(byteArrayOf(0x05, 0x01, 0x00))
+                    out.flush()
+                    val ver = inp.read()
+                    val method = inp.read()
+                    if (ver == 0x05 && method != -1) {
+                        Pair(true, "SOCKS5 متصل (${config.host}:${config.port})")
+                    } else {
+                        Pair(true, "SOCKS5 TCP متصل (${config.host}:${config.port})")
+                    }
+                }
+            } else if (config.security.equals("tls", true) || config.security.equals("reality", true) || config.protocol == "TROJAN") {
+                val factory = SSLSocketFactory.getDefault()
+                factory.createSocket().use { rawSocket ->
+                    protect(rawSocket)
+                    rawSocket.soTimeout = 5000
+                    rawSocket.connect(InetSocketAddress(config.host, config.port), 5000)
+                    Pair(true, "${config.protocol} TLS متصل (${config.host}:${config.port})")
+                }
+            } else {
+                Socket().use { socket ->
+                    protect(socket)
+                    socket.soTimeout = 5000
+                    socket.connect(InetSocketAddress(config.host, config.port), 5000)
+                    Pair(true, "${config.protocol} متصل (${config.host}:${config.port})")
+                }
+            }
+        } catch (e: Exception) {
+            Pair(false, "فشل الوصول إلى ${config.host}:${config.port} (${e.message ?: "خطأ شبكة"})")
         }
     }
 

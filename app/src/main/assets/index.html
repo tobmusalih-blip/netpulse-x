@@ -402,6 +402,7 @@
 
                     <div class="relative flex items-center bg-[#090614] border border-purple-500/25 rounded-xl px-3 py-2 mb-2 focus-within:border-purple-500 transition">
                         <input id="serverInput" type="text" placeholder="أدخل رابط السيرفر هنا..." class="w-full bg-transparent text-xs text-white placeholder-gray-400 focus:outline-none">
+<button type="button" onclick="pasteServerFromClipboard()" title="لصق السيرفر" class="px-2.5 py-2 rounded-xl bg-purple-950/60 border border-purple-500/25 hover:bg-purple-900/60 transition flex items-center justify-center"><svg class="w-4 h-4 text-purple-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></button>
                         <button onclick="pasteSampleServer()" title="لصق رابط السيرفر" class="w-7 h-7 rounded-lg bg-[#17112b] border border-purple-500/20 flex items-center justify-center text-gray-300 hover:text-purple-300 flex-shrink-0 mr-2">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
@@ -634,6 +635,43 @@
                                 <span id="countryAfter" class="font-bold text-emerald-400">غير معروف</span>
                             </div>
                         </div>
+<div id="geoTunnelCard" class="cyber-card rounded-2xl p-4 space-y-3 mt-3">
+    <div class="flex items-center justify-between">
+        <h3 class="text-xs font-extrabold text-white">تفاصيل النفق والبلد والـ IP</h3>
+        <span id="ipChangeBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-900/50 border border-purple-500/30 text-purple-200">بانتظار الفحص</span>
+    </div>
+    <div class="space-y-1.5">
+        <div class="text-xs font-bold text-gray-200">البلد (قبل وبعد التشغيل):</div>
+        <div class="grid grid-cols-2 gap-2 text-[11px]">
+            <div class="bg-[#090614] border border-purple-500/15 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+                <span class="text-gray-400">قبل:</span>
+                <span id="countryBefore" class="font-bold text-amber-300">غير معروف</span>
+            </div>
+            <div class="bg-[#090614] border border-purple-500/15 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+                <span class="text-gray-400">بعد:</span>
+                <span id="countryAfter" class="font-bold text-emerald-400">غير معروف</span>
+            </div>
+        </div>
+    </div>
+    <div class="space-y-1.5">
+        <div class="text-xs font-bold text-gray-200">عنوان IP (قبل وبعد التشغيل):</div>
+        <div class="space-y-1.5 text-[11px]" dir="ltr">
+            <div class="bg-[#090614] border border-purple-500/15 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+                <span class="text-gray-400 font-sans">Before IP:</span>
+                <span id="ipBefore" class="font-mono font-bold text-amber-300">غير معروف</span>
+            </div>
+            <div class="bg-[#090614] border border-purple-500/15 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+                <span class="text-gray-400 font-sans">After IP:</span>
+                <span id="ipAfter" class="font-mono font-bold text-emerald-400">غير معروف</span>
+            </div>
+        </div>
+    </div>
+    <div class="flex justify-between items-center text-xs pt-0.5 border-t border-purple-500/15">
+        <span class="text-gray-400">خادم DNS:</span>
+        <input id="dnsInput" type="text" value="1.1.1.1" onchange="updateDnsServer(this.value)" class="w-32 bg-[#090614] border border-purple-500/25 rounded-lg px-2 py-1 text-left font-mono font-bold text-emerald-400 text-xs focus:outline-none focus:border-purple-400" dir="ltr">
+    </div>
+</div>
+
                     </div>
 
                     <div class="border-b border-purple-500/15 pb-2.5 space-y-1.5">
@@ -1342,6 +1380,115 @@
             if (upEl && upEl.textContent.trim() === '0.00 MB') upEl.textContent = formatBytesFromMB(0.02);
             if (dnEl && dnEl.textContent.trim() === '0.00 MB') dnEl.textContent = formatBytesFromMB(0.04);
         }
+    };
+
+    document.addEventListener('DOMContentLoaded', window.enforceDefaultAdvancedToggles);
+    window.addEventListener('load', window.enforceDefaultAdvancedToggles);
+})();
+</script>
+
+
+<script>
+(function() {
+    window.pasteServerFromClipboard = async function() {
+        let text = '';
+        try {
+            if (window.ProxyXBridge && typeof window.ProxyXBridge.pasteFromClipboard === 'function') {
+                text = window.ProxyXBridge.pasteFromClipboard() || '';
+            }
+        } catch (_) {}
+
+        if (!text && navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+            try { text = await navigator.clipboard.readText(); } catch (_) {}
+        }
+
+        text = (text || '').trim();
+        const inp = document.getElementById('serverInput');
+        if (!text) {
+            if (typeof window.showToast === 'function') window.showToast('الحافظة فارغة، انسخ رابط السيرفر أولاً');
+            return;
+        }
+        if (inp) {
+            inp.value = text;
+            inp.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        if (typeof window.showToast === 'function') window.showToast('تم لصق السيرفر من الحافظة');
+    };
+
+    window.updateDnsServer = function(val) {
+        const clean = (val || '').trim() || '1.1.1.1';
+        const inp = document.getElementById('dnsInput');
+        if (inp) inp.value = clean;
+        if (typeof window.showToast === 'function') window.showToast(`تم تعيين DNS إلى ${clean}`);
+    };
+
+    window.togglePersistentOption = function(elId, storageKey, label) {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        el.classList.toggle('on');
+        const enabled = el.classList.contains('on');
+        try { localStorage.setItem(storageKey, enabled ? '1' : '0'); } catch (_) {}
+        if (typeof window.showToast === 'function') {
+            window.showToast(enabled ? `تم تفعيل ${label}` : `تم إيقاف ${label}`);
+        }
+    };
+
+    window.enforceDefaultAdvancedToggles = function() {
+        [
+            { elId: 'dnsToggle', key: 'netpulse_dns_custom' },
+            { elId: 'tlsMuxToggle', key: 'netpulse_tls_mux' }
+        ].forEach(({ elId, key }) => {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            let saved = null;
+            try { saved = localStorage.getItem(key); } catch (_) {}
+            const shouldBeOn = (saved === null) ? true : (saved === '1');
+            el.classList.toggle('on', shouldBeOn);
+        });
+    };
+
+    function applyGeoFromPayload(info) {
+        if (!info || typeof info !== 'object') return;
+        const bIp = info.beforeIp || 'غير معروف';
+        const bCountry = info.beforeCountry || 'غير معروف';
+        const aIp = info.afterIp || 'غير معروف';
+        const aCountry = info.afterCountry || 'غير معروف';
+        const changed = Boolean(info.ipChanged);
+
+        const elCB = document.getElementById('countryBefore');
+        const elCA = document.getElementById('countryAfter');
+        const elIB = document.getElementById('ipBefore');
+        const elIA = document.getElementById('ipAfter');
+        const badge = document.getElementById('ipChangeBadge');
+        const dnsInp = document.getElementById('dnsInput');
+
+        if (elCB) elCB.textContent = bCountry;
+        if (elCA) elCA.textContent = aCountry;
+        if (elIB) elIB.textContent = bIp;
+        if (elIA) elIA.textContent = aIp;
+        if (info.dns && dnsInp) dnsInp.value = info.dns;
+
+        if (badge) {
+            if (info.state === 'connected') {
+                badge.textContent = changed ? 'تغيّر IP والبلد ✓' : 'نفس IP الحالي';
+                badge.className = changed
+                    ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-900/50 border border-emerald-400/40 text-emerald-300'
+                    : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-900/50 border border-amber-400/40 text-amber-300';
+            } else {
+                badge.textContent = 'بانتظار الفحص';
+                badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-900/50 border border-purple-500/30 text-purple-200';
+            }
+        }
+    }
+
+    const prevHandler = window.onNativeVpnState;
+    window.onNativeVpnState = function(jsonOrState) {
+        let parsed = jsonOrState;
+        if (typeof jsonOrState === 'string') {
+            try { parsed = JSON.parse(jsonOrState); } catch (_) {}
+        }
+        applyGeoFromPayload(parsed);
+        if (typeof prevHandler === 'function') prevHandler(parsed);
     };
 
     document.addEventListener('DOMContentLoaded', window.enforceDefaultAdvancedToggles);
