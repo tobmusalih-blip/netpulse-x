@@ -328,7 +328,7 @@
                         <span class="text-[10px] text-purple-300/70">↗</span>
                     </div>
 
-                    <div class="flex items-stretch gap-2 overflow-x-auto pb-1">
+                    <div id="protocolsRow" class="flex items-stretch gap-1.5 overflow-x-auto pb-1">
                         <button onclick="selectProtocol('VLESS', this)" class="protocol-card active rounded-xl py-2 px-0.5 flex flex-col items-center justify-center relative">
                             <span class="proto-check absolute -top-1.5 -right-1 w-4 h-4 rounded-full bg-purple-500 text-white flex items-center justify-center text-[9px] font-black shadow-[0_0_8px_#a855f7]">✓</span>
                             <svg class="w-6 h-6 mb-1" viewBox="0 0 24 24" fill="none">
@@ -1667,6 +1667,84 @@
             setTimeout(() => syncActiveProtocolVisual(ipBtn, 'IP_PROXY'), 10);
         }
     });
+})();
+</script>
+
+
+<script>
+(function() {
+    function getProtocolContainer() {
+        const ipBtn = document.querySelector('[data-proto="IP_PROXY"]');
+        if (ipBtn && ipBtn.parentElement) return ipBtn.parentElement;
+        return document.getElementById('protocolsRow');
+    }
+
+    function moveSelectionToIpProxy() {
+        const container = getProtocolContainer();
+        const ipBtn = document.querySelector('[data-proto="IP_PROXY"]');
+        if (!container || !ipBtn) return;
+
+        const items = Array.from(container.children).filter(el => el.tagName === 'BUTTON' || el.tagName === 'DIV');
+        let activeDonor = null;
+
+        for (const el of items) {
+            if (el === ipBtn) continue;
+            const cls = el.className || '';
+            const hasBadge = el.querySelector('[data-check], .check-icon, .active-badge, svg.check, span.check');
+            if (el.classList.contains('active') || el.classList.contains('selected') || cls.includes('active') || cls.includes('selected') || cls.includes('border-purple-400') || hasBadge) {
+                activeDonor = el;
+                break;
+            }
+        }
+
+        // نقل الكلاسات النشطة من البطاقة السابقة إلى IP Proxy
+        items.forEach(el => {
+            if (el === ipBtn) return;
+            el.classList.remove('active', 'selected', 'ring-2', 'ring-purple-400', 'border-purple-400', 'bg-purple-900/50', 'bg-purple-950/70', 'text-white', 'shadow-lg');
+            el.removeAttribute('data-active');
+            el.querySelectorAll('.ip-proxy-moved-badge, .ip-proxy-check').forEach(x => x.remove());
+        });
+
+        ipBtn.classList.add('active', 'selected', 'border-purple-400', 'bg-purple-900/50', 'text-white');
+        ipBtn.setAttribute('data-active', 'true');
+
+        if (!ipBtn.querySelector('.ip-proxy-check')) {
+            const badge = document.createElement('span');
+            badge.className = 'ip-proxy-check absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-purple-500 text-white flex items-center justify-center text-[10px] font-extrabold shadow';
+            badge.textContent = '✓';
+            if (getComputedStyle(ipBtn).position === 'static') {
+                ipBtn.style.position = 'relative';
+            }
+            ipBtn.appendChild(badge);
+        }
+
+        if (window.appState) {
+            window.appState.protocol = 'IP_PROXY';
+        }
+        const protoEl = document.getElementById('statsProto');
+        if (protoEl) protoEl.textContent = 'IP Proxy';
+        const inp = document.getElementById('serverInput');
+        if (inp) {
+            inp.placeholder = 'أدخل عنوان IP والمنفذ مثل 197.232.158.189:41890...';
+        }
+    }
+
+    window.selectIpProxyProtocol = function(btnEl) {
+        moveSelectionToIpProxy();
+        setTimeout(moveSelectionToIpProxy, 20);
+        setTimeout(moveSelectionToIpProxy, 120);
+        if (typeof window.showToast === 'function') {
+            window.showToast('تم اختيار بروتوكول IP Proxy المخصص لعناوين IP:PORT');
+        }
+    };
+
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('[data-proto="IP_PROXY"]')) {
+            moveSelectionToIpProxy();
+            setTimeout(moveSelectionToIpProxy, 30);
+            setTimeout(moveSelectionToIpProxy, 150);
+        }
+    }, true);
 })();
 </script>
 
