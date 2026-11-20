@@ -80,7 +80,7 @@ class ProxyXVpnService : VpnService() {
             }
 
             val afterGeo = ProxyTunnelEngine.fetchCurrentGeoIp()
-            val ipChanged = beforeGeo.ip != "غير معروف" &&
+            val changed = beforeGeo.ip != "غير معروف" &&
                 beforeGeo.ip != "تعذر الجلب" &&
                 afterGeo.ip != "غير معروف" &&
                 afterGeo.ip != "تعذر الجلب" &&
@@ -104,7 +104,7 @@ class ProxyXVpnService : VpnService() {
             beforeCountry = beforeGeo.country
             afterIp = afterGeo.ip
             afterCountry = afterGeo.country
-            ipChanged = ipChanged
+            ipChanged = changed
             MainActivity.dispatchStatusToUi("connected", detail)
         }
     }
@@ -177,54 +177,41 @@ class ProxyXVpnService : VpnService() {
 
         @Volatile
         var isRunning: Boolean = false
-            private set
 
         @Volatile
         var activeProtocol: String = "VLESS"
-            private set
 
         @Volatile
         var activeServer: String = ""
-            private set
 
         @Volatile
         var activeRouting: String = "افتراضي"
-            private set
 
         @Volatile
         var activeDns: String = "1.1.1.1"
-            private set
 
         @Volatile
         var activeEndpoint: String = ""
-            private set
 
         @Volatile
         var lastLatencyMs: Long = -1L
-            private set
 
         @Volatile
         var lastError: String = ""
-            private set
 
         @Volatile
         var beforeIp: String = "غير معروف"
-            private set
 
         @Volatile
         var beforeCountry: String = "غير معروف"
-            private set
 
         @Volatile
         var afterIp: String = "غير معروف"
-            private set
 
         @Volatile
         var afterCountry: String = "غير معروف"
-            private set
 
         @Volatile
         var ipChanged: Boolean = false
-            private set
     }
 }
