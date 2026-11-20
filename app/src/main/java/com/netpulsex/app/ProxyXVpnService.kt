@@ -111,7 +111,14 @@ class ProxyXVpnService : VpnService() {
 
     private fun probeProtectedEndpoint(config: ParsedServerConfig): Pair<Boolean, String> {
         return try {
-            if (config.protocol == "SOCKS5") {
+            if (config.protocol == "IP_PROXY") {
+                Socket().use { socket ->
+                    protect(socket)
+                    socket.soTimeout = 5000
+                    socket.connect(InetSocketAddress(config.host, config.port), 5000)
+                    Pair(true, "IP Proxy متصل مباشرة (${config.host}:${config.port})")
+                }
+            } else if (config.protocol == "SOCKS5") {
                 Socket().use { socket ->
                     protect(socket)
                     socket.soTimeout = 5000
