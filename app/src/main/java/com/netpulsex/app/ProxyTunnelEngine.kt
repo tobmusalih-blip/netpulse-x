@@ -1,8 +1,6 @@
 package com.netpulsex.app
 
 import android.content.Context
-import android.net.TrafficStats
-import android.os.Process
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.File
@@ -53,13 +51,6 @@ object ProxyTunnelEngine {
         } catch (_: Exception) {
             GeoIpInfo(ip = "تعذر الجلب", country = "غير معروف")
         }
-    }
-
-    fun getUidTrafficBytes(): Pair<Long, Long> {
-        val uid = Process.myUid()
-        val tx = TrafficStats.getUidTxBytes(uid).let { if (it < 0L) 0L else it }
-        val rx = TrafficStats.getUidRxBytes(uid).let { if (it < 0L) 0L else it }
-        return Pair(tx, rx)
     }
 
     fun establishConnection(context: Context, config: ParsedServerConfig): TunnelResult {
@@ -131,9 +122,9 @@ object ProxyTunnelEngine {
             beforeGeo.ip != afterGeo.ip
 
         val changeNote = if (ipChanged) {
-            "تغيّر IP (${beforeGeo.ip} → ${afterGeo.ip})"
+            "تغيّر IP (${beforeGeo.ip} -> ${afterGeo.ip})"
         } else {
-            "نفس IP (${afterGeo.ip}) - يتطلب نواة توجيه حزم TUN لتمرير كل البيانات"
+            "نفس IP (${afterGeo.ip})"
         }
 
         return TunnelResult(

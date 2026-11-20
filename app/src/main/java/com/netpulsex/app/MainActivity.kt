@@ -149,27 +149,6 @@ class MainActivity : Activity() {
         fun getStatus(): String {
             return if (ProxyXVpnService.isRunning) "connected" else "disconnected"
         }
-
-        @JavascriptInterface
-        fun getTrafficJson(): String {
-            val (txNow, rxNow) = ProxyTunnelEngine.getUidTrafficBytes()
-            val txDelta = if (ProxyXVpnService.isRunning && txNow >= ProxyXVpnService.sessionStartTxBytes) {
-                txNow - ProxyXVpnService.sessionStartTxBytes
-            } else {
-                0L
-            }
-            val rxDelta = if (ProxyXVpnService.isRunning && rxNow >= ProxyXVpnService.sessionStartRxBytes) {
-                rxNow - ProxyXVpnService.sessionStartRxBytes
-            } else {
-                0L
-            }
-            return JSONObject().apply {
-                put("txBytes", txDelta)
-                put("rxBytes", rxDelta)
-                put("totalTxBytes", txNow)
-                put("totalRxBytes", rxNow)
-            }.toString()
-        }
     }
 
     @Deprecated("Deprecated in Java")

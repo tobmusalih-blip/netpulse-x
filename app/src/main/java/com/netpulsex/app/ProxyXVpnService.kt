@@ -61,10 +61,6 @@ class ProxyXVpnService : VpnService() {
         executor.execute {
             val probe = ProxyTunnelEngine.establishConnection(applicationContext, config)
             if (probe.ok) {
-                val (txStart, rxStart) = ProxyTunnelEngine.getUidTrafficBytes()
-                sessionStartTxBytes = txStart
-                sessionStartRxBytes = rxStart
-
                 isRunning = true
                 lastError = ""
                 activeProtocol = config.protocol
@@ -163,14 +159,6 @@ class ProxyXVpnService : VpnService() {
 
         @Volatile
         var ipChanged: Boolean = false
-            private set
-
-        @Volatile
-        var sessionStartTxBytes: Long = 0L
-            private set
-
-        @Volatile
-        var sessionStartRxBytes: Long = 0L
             private set
     }
 }
