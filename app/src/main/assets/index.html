@@ -328,7 +328,7 @@
                         <span class="text-[10px] text-purple-300/70">↗</span>
                     </div>
 
-                    <div class="grid grid-cols-6 gap-1.5" id="protocolGrid">
+                    <div class="flex items-stretch gap-2 overflow-x-auto pb-1">
                         <button onclick="selectProtocol('VLESS', this)" class="protocol-card active rounded-xl py-2 px-0.5 flex flex-col items-center justify-center relative">
                             <span class="proto-check absolute -top-1.5 -right-1 w-4 h-4 rounded-full bg-purple-500 text-white flex items-center justify-center text-[9px] font-black shadow-[0_0_8px_#a855f7]">✓</span>
                             <svg class="w-6 h-6 mb-1" viewBox="0 0 24 24" fill="none">
@@ -376,7 +376,7 @@
                             <span class="text-[8px] font-bold text-gray-300 tracking-tight">SOCKS5</span>
                         </button>
 
-                        <button type="button" data-proto="IP_PROXY" onclick="selectIpProxyProtocol(this)" class="proto-btn flex flex-col items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-[#120d26] border border-purple-500/20 text-gray-300 hover:border-cyan-400/50 transition"><svg class="w-4 h-4 text-cyan-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 0c2.5 2.8 4 6.3 4 10s-1.5 7.2-4 10m0-20c-2.5 2.8-4 6.3-4 10s1.5 7.2 4 10M2 12h20"/></svg><span class="text-[11px] font-bold">IP Proxy</span></button>
+                        
 <button onclick="selectProtocol('WireGuard', this)" class="protocol-card rounded-xl py-2 px-0.5 flex flex-col items-center justify-center relative">
                             <span class="proto-check hidden absolute -top-1.5 -right-1 w-4 h-4 rounded-full bg-purple-500 text-white flex items-center justify-center text-[9px] font-black shadow-[0_0_8px_#a855f7]">✓</span>
                             <div class="w-5 h-5 mb-1.5 rounded-full bg-red-600/90 border border-red-400/50 flex items-center justify-center shadow-[0_0_8px_rgba(220,38,38,0.6)]">
@@ -386,6 +386,7 @@
                             </div>
                             <span class="text-[8px] font-bold text-gray-300 tracking-tight">WireGuard</span>
                         </button>
+<button type="button" data-proto="IP_PROXY" onclick="selectIpProxyProtocol(this)" class="proto-btn flex flex-col items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-[#120d26] border border-purple-500/20 text-gray-300 hover:border-cyan-400/50 transition"><svg class="w-4 h-4 text-cyan-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 0c2.5 2.8 4 6.3 4 10s-1.5 7.2-4 10m0-20c-2.5 2.8-4 6.3-4 10s1.5 7.2 4 10M2 12h20"/></svg><span class="text-[11px] font-bold">IP Proxy</span></button>
                     </div>
                 </div>
 
@@ -1594,6 +1595,78 @@
             window.showToast('تم اختيار بروتوكول IP Proxy المخصص لعناوين IP:PORT');
         }
     };
+})();
+</script>
+
+
+<script>
+(function() {
+    function syncActiveProtocolVisual(targetBtn, protoName) {
+        const allCards = Array.from(document.querySelectorAll('button, div')).filter(el => {
+            if (!el.closest || !el.closest('#localServersSection') === false) return false;
+            const txt = (el.textContent || '').trim();
+            return ['VLESS', 'VMess', 'Trojan', 'Shadowsocks', 'SOCKS5', 'WireGuard', 'IP Proxy'].some(p => txt === p || txt.startsWith(p + '\n') || txt.endsWith('\n' + p));
+        });
+
+        let templateActiveEl = null;
+        let templateInactiveEl = null;
+        for (const el of allCards) {
+            if (el === targetBtn) continue;
+            const cls = el.className || '';
+            if (!templateActiveEl && (cls.includes('active') || cls.includes('selected') || cls.includes('border-purple-400') || cls.includes('shadow'))) {
+                templateActiveEl = el;
+            } else if (!templateInactiveEl) {
+                templateInactiveEl = el;
+            }
+        }
+
+        allCards.forEach(el => {
+            if (el === targetBtn) return;
+            el.classList.remove('active', 'selected', 'ring-2', 'ring-purple-400', 'border-purple-400', 'bg-purple-900/50');
+            el.setAttribute('aria-pressed', 'false');
+            el.querySelectorAll('.proto-check-badge, [data-active-badge="true"]').forEach(b => b.remove());
+        });
+
+        if (targetBtn) {
+            targetBtn.classList.add('active', 'selected', 'border-purple-400', 'bg-purple-900/50', 'text-white');
+            targetBtn.setAttribute('aria-pressed', 'true');
+
+            if (templateActiveEl) {
+                const badgeSource = templateActiveEl.querySelector('svg:last-child, span.absolute, .check, [class*="check"]');
+                if (badgeSource && !targetBtn.querySelector('.ip-proxy-check')) {
+                    const checkSpan = document.createElement('span');
+                    checkSpan.className = 'ip-proxy-check w-4 h-4 rounded-full bg-purple-500 text-white flex items-center justify-center text-[10px] font-bold shadow';
+                    checkSpan.textContent = '✓';
+                    targetBtn.prepend(checkSpan);
+                }
+            }
+        }
+
+        if (window.appState) {
+            window.appState.protocol = protoName || 'IP_PROXY';
+        }
+        const protoEl = document.getElementById('statsProto');
+        if (protoEl) protoEl.textContent = 'IP Proxy';
+        const inp = document.getElementById('serverInput');
+        if (inp) {
+            inp.placeholder = 'أدخل عنوان IP والمنفذ مثل 197.232.158.189:41890...';
+        }
+    }
+
+    window.selectIpProxyProtocol = function(btnEl) {
+        const btn = btnEl || document.querySelector('[data-proto="IP_PROXY"]');
+        syncActiveProtocolVisual(btn, 'IP_PROXY');
+        if (typeof window.showToast === 'function') {
+            window.showToast('تم اختيار بروتوكول IP Proxy المخصص لعناوين IP:PORT');
+        }
+    };
+
+    document.addEventListener('click', function(e) {
+        const ipBtn = e.target.closest('[data-proto="IP_PROXY"]');
+        if (ipBtn) {
+            setTimeout(() => syncActiveProtocolVisual(ipBtn, 'IP_PROXY'), 10);
+        }
+    });
 })();
 </script>
 
