@@ -1496,5 +1496,52 @@
 })();
 </script>
 
+
+<script>
+(function() {
+    let lastAutoSaved = '';
+    function autoSaveInputServer() {
+        const inp = document.getElementById('serverInput');
+        if (!inp) return;
+        const val = (inp.value || '').trim();
+        if (!val || val === lastAutoSaved) return;
+        if (typeof window.saveCurrentServerToLocal === 'function') {
+            lastAutoSaved = val;
+            window.saveCurrentServerToLocal(val);
+        }
+    }
+
+    function bindAutoSave() {
+        const inp = document.getElementById('serverInput');
+        if (inp && !inp.dataset.autoSaveHooked) {
+            inp.dataset.autoSaveHooked = '1';
+            inp.addEventListener('paste', function() {
+                setTimeout(autoSaveInputServer, 60);
+            });
+            inp.addEventListener('input', function() {
+                clearTimeout(inp._autoSaveTimer);
+                inp._autoSaveTimer = setTimeout(autoSaveInputServer, 350);
+            });
+            inp.addEventListener('change', autoSaveInputServer);
+        }
+    }
+
+    const origPaste = window.pasteServerFromClipboard;
+    if (typeof origPaste === 'function' && !origPaste._autoSaveWrapped) {
+        const wrapped = async function() {
+            const res = await origPaste.apply(this, arguments);
+            setTimeout(autoSaveInputServer, 60);
+            return res;
+        };
+        wrapped._autoSaveWrapped = true;
+        window.pasteServerFromClipboard = wrapped;
+    }
+
+    document.addEventListener('DOMContentLoaded', bindAutoSave);
+    window.addEventListener('load', bindAutoSave);
+    setTimeout(bindAutoSave, 300);
+})();
+</script>
+
 </body>
 </html>
